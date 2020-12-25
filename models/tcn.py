@@ -1,0 +1,167 @@
+"""Temporal Concolutional Network for time-series
+
+Adapted from https://github.com/locuslab/TCN/blob/master/TCN/tcn.py under the
+following license:
+
+MIT License
+
+Copyright (c) 2018 CMU Locus Lab
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+"""
+
+import torch
+import torch.nn as nn
+from torch.nn.utils import weight_norm
+
+
+class Chomp1d(nn.Module):
+    def __init__(self, chomp_size: int) -> None:
+        super(Chomp1d, self).__init__()
+        self.chomp_size = chomp_size
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x[:, :, :-self.chomp_size].contiguous()
+
+
+class TemporalBlock(nn.Module):
+    def __init__(
+            self,
+            n_inputs: int,
+            n_outputs: int,
+            kernel_size: int,
+            stride: int,
+            dilation: int,
+            padding: int,
+            dropout: float = 0.2) -> None:
+
+        super(TemporalBlock, self).__init__()
+        self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding,
+                                           dilation=dilation))
+        self.chomp1 = Chomp1d(padding)
+        self.relu1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(dropout)
+
+        self.conv2 = weight_norm(nn.Conv1d(n_outputs, n_outputs, kernel_size,
+                                           stride=stride, padding=padding,
+                                           dilation=dilation))
+        self.chomp2 = Chomp1d(padding)
+        self.relu2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(dropout)
+
+        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1,
+                                 self.dropout1,
+                                 self.conv2, self.chomp2, self.relu2,
+                                 self.dropout2)
+        self.downsample = nn.Conv1d(n_inputs, n_outputs,
+                                    1) if n_inputs != n_outputs else None
+        self.relu = nn.ReLU()
+        self.init_weights()
+
+    def init_weights(self):
+        self.conv1.weight.data.normal_(0, 0.01)
+        self.conv2.weight.data.normal_(0, 0.01)
+        if self.downsample is not None:
+            self.downsample.weight.data.normal_(0, 0.01)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.net(x)
+        res = x if self.downsample is None else self.downsample(x)
+        return self.relu(out + res)
+
+
+class TemporalConvNet(nn.Module):
+    """Implements a Temporal Convolutional Network (TCN).
+
+    https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
+
+    Shapes
+    ------
+    - Input:  (batch_size, input_size, sequence_length)
+    - Output: (batch_size, num_channels[-1], sequence_length)
+
+    Parameters
+    ----------
+    input_size: int
+        The mumber of input features.
+    hidden_size: int
+        The hidden size (intermediate channel sizes) of the layers.
+    kernel_size: int
+        The kernel size.
+    num_layers: int
+        The number of stacked layers.
+    dropout: float
+        A float value in the range (0, 1) that defines the dropout
+        probability.
+    """
+
+    def __init__(
+            self,
+            input_size: int,
+            hidden_size: int,
+            kernel_size: int = 4,
+            num_layers: int = 2,
+            dropout: float = 0.0) -> None:
+
+        super().__init__()
+
+        # Used to calculate receptive field (`self.receptive_field_size`).
+        self.kernel_size = kernel_size
+        self.num_layers = num_layers
+
+        layers = []
+        for i in range(num_layers):
+            dilation_size = 2 ** i
+            in_channels = input_size if i == 0 else hidden_size
+            layers += [
+                TemporalBlock(
+                    in_channels,
+                    hidden_size,
+                    kernel_size,
+                    stride=1,
+                    dilation=dilation_size,
+                    padding=(kernel_size - 1) * dilation_size,
+                    dropout=dropout)
+            ]
+
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.network(x)
+
+    def receptive_field_size(self) -> int:
+        """Returns the receptive field of the Module.
+
+        The receptive field (number of steps the model looks back) of the model depends
+        on the number of layers and the kernel size.
+
+        Returns
+        -------
+        size: int
+            The size of the receptive field.
+
+        """
+
+        size = 1
+        for n in range(self.num_layers):
+            current_size = (self.kernel_size - 1) * (2 ** n)
+            size += current_size
+        return size
