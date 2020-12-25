@@ -93,24 +93,16 @@ class TemporalConvNet(nn.Module):
 
     https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
 
-    Shapes
-    ------
-    - Input:  (batch_size, input_size, sequence_length)
-    - Output: (batch_size, num_channels[-1], sequence_length)
+    Shapes:
+        Input:  (batch_size, input_size, sequence_length)
+        Output: (batch_size, num_channels[-1], sequence_length)
 
-    Parameters
-    ----------
-    input_size: int
-        The mumber of input features.
-    hidden_size: int
-        The hidden size (intermediate channel sizes) of the layers.
-    kernel_size: int
-        The kernel size.
-    num_layers: int
-        The number of stacked layers.
-    dropout: float
-        A float value in the range (0, 1) that defines the dropout
-        probability.
+    Args:
+        input_size (int): the mumber of input features.
+        hidden_size (int): the hidden size (intermediate channel sizes) of the layers.
+        kernel_size (int): the kernel size. Defaults to 4.
+        num_layers (int): the number of stacked layers. Defaults to 2.
+        dropout (float): a float value in the range [0, 1) that defines the dropout probability. Defaults to 0.0.
     """
 
     def __init__(
@@ -145,6 +137,14 @@ class TemporalConvNet(nn.Module):
         self.network = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run data through the model.
+
+        Args:
+            x (torch.Tensor): the input data.
+
+        Returns:
+            torch.Tensor: the model output.
+        """
         return self.network(x)
 
     def receptive_field_size(self) -> int:
@@ -153,10 +153,8 @@ class TemporalConvNet(nn.Module):
         The receptive field (number of steps the model looks back) of the model depends
         on the number of layers and the kernel size.
 
-        Returns
-        -------
-        size: int
-            The size of the receptive field.
+        Returns:
+            int: the size of the receptive field.
 
         """
 
