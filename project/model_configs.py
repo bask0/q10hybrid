@@ -1,3 +1,5 @@
+"""A collection of model configurations."""
+
 import optuna
 import pytorch_lightning as pl
 
