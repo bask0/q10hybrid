@@ -1,6 +1,6 @@
 
 from torch import nn
-from typing import Union
+from typing import Union, Callable
 from torch import Tensor
 
 
@@ -106,3 +106,25 @@ def flat2seq(x: Tensor, num_features: int) -> Tensor:
         )
 
     return x.view(x.shape[0], -1, num_features)
+
+
+class Transform(nn.Module):
+    def __init__(self, transform_fun: Callable):
+        """Transform layer, applies `transform_fun`.
+
+        Example:
+            >>> import torch
+            >>> reshape_fun = lambda x: x.flatten(start_dim=1)
+            >>> flatten_layer = Transform(reshape_fun)
+            >>> flatten_layer(torch.ones(2, 3, 4)).shape
+            torch.Size([2, 12])
+
+        Args:
+            transform_fun (Callable): thetransform function.
+        """
+        super(Transform, self).__init__()
+
+        self.transform_fun = transform_fun
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.transform_fun(x)
