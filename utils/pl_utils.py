@@ -19,7 +19,7 @@ class LightningNet(pl.LightningModule):
             self,
             model: nn.Module,
             lr: float,
-            batch_size: int,
+            weight_decay: float,
             max_epochs: int,
             learning_strategy: str = 'adamwr',
             num_warmup_batches: Union[int, str] = 10) -> None:
@@ -36,8 +36,8 @@ class LightningNet(pl.LightningModule):
 
         Args:
             model (nn.Module): a PyTorch model.
-            lr (float): the learning rate.
-            batch_size (int): the batch size.
+            lr (float): the learning rate, > 0.0.
+            weight_decay (float): weight decay (L2 regulatizatiuon), > 0.0.
             max_epochs (int): the number of epochs, used for learning
                 rate schedulers.
             learning_strategy (str): the learning strategy, one of `AdamWWR`,
@@ -50,7 +50,7 @@ class LightningNet(pl.LightningModule):
         super().__init__()
 
         self.lr = lr
-        self.batch_size = batch_size
+        self.weight_decay = weight_decay
         self.max_epochs = max_epochs
         self.num_warmup_batches = num_warmup_batches
 
