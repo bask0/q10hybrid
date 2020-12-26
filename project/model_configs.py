@@ -1,18 +1,19 @@
 """A collection of model configurations."""
 
 import optuna
+from torch import nn
 import pytorch_lightning as pl
 
 from models.feedforward import FeedForward
 from models.tcn import TemporalConvNet
 
-from utils.pytorch_lighnting import LightningNet
-from utils.config import BaseConfig
+from utils.pl_utils import LightningNet
+from utils.config_utils import BaseConfig
+from utils.torch_utils import Transform
 
 
-class HConfig(BaseConfig):
-    """Global model configuration (does not change / is not tunable).
-    """
+class Config(BaseConfig):
+    """Global model configuration (does not change / is not tunable)."""
     def __init__(self, study_name: str = 'study', batch_size: int = 10, *args, **kwargs):
         """Model config.
 
@@ -22,7 +23,7 @@ class HConfig(BaseConfig):
             study_name (str, optional): the study name. Defaults to `study`.
             batch_size (int, optional): the batch size. Defaults to 10.
         """
-        super(HConfig, self).__init__(*args, **kwargs)
+        super(Config, self).__init__(*args, **kwargs)
 
         self.STUDY_NAME = study_name
 
@@ -82,12 +83,22 @@ def tcn(config: BaseConfig, trial: optuna.trial.Trial) -> pl.LightningModule:
         pl.LightningModule: a lightning module.
     """
 
-    model = TemporalConvNet(
+    tcn = TemporalConvNet(
         num_inputs=config.NUM_INPUTS,
         num_hidden=trial.suggest_int('num_hidden', 1, 4),
         kernel_size=trial.suggest_int('kernel_size', 1, 4),
         num_layers=trial.suggest_int('kernel_size', 1, 2),
         dropout=trial.suggest_float('dropout', 0.1, 0.3)
+    )
+
+    transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
+
+    linear = nn.Linear(tcn.num_hidden, config.NUM_OUTPUTS)
+
+    model = nn.Sequential(
+        tcn,  # -> (batch, num_hidden, seq)
+        transform,  # -> (batch, seq, num_hidden)
+        linear  # -> (batch, seq, num_out)
     )
 
     pl_model = LightningNet(
