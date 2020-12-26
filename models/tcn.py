@@ -115,6 +115,9 @@ class TemporalConvNet(nn.Module):
 
         super().__init__()
 
+        # Needed do determine output size for downsteam layers.
+        self.num_hidden = num_hidden
+
         # Used to calculate receptive field (`self.receptive_field_size`).
         self.kernel_size = kernel_size
         self.num_layers = num_layers
