@@ -13,7 +13,7 @@ os.environ['WANDB_SILENT'] = 'true'
 
 
 class TrialNameNotSetError(Exception):
-    """Raised if trial name is not set (==`--`).
+    """Raised if trial name is not set (`--`).
 
     Attributes:
         message (srt): explanation of the error
