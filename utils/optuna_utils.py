@@ -6,12 +6,11 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 
-from typing import Callable
+from typing import Callable, Dict, Optional
 from numbers import Number
 
 from project.utils import BaseConfig
 from project.pl_utils import MetricsCallback
-from project.dummy_data import DummyData
 
 
 class Objective(object):
@@ -19,24 +18,31 @@ class Objective(object):
             self,
             config: BaseConfig,
             model_generator: Callable,
+            data_module: pl.LightningDataModule,
             resume: bool = False,
             fast_dev_run: bool = False,
-            wandb_offline: bool = False) -> None:
+            wandb_offline: bool = False,
+            data_module_kwargs: Optional[Dict] = {}) -> None:
         """Defines an optuna `objective`.
 
         Args:
             config (BaseConfig): the hardcoded configuration.
             model_generator (Callable): a function that takes a `config` and a `trail` and returns
                 a pl.LightningModule.
+            data_module (pl.LightningDataModule): a pytorch-lightning data module, must take at least an
+                argument `batch_size`. Further arguments can be passed via `data_module_kwargs`.
             resume (bool): whether to resume a previous run.
             fast_dev_run (bool, optional): wheter to run a fast dev run. Defaults to `False`.
             wandb_offline (bool, optional): run offline. If `True`, do not transfer to wandb server.
                 Defaults to `False`.
+            data_module_kwargs (Optional[Dict]): Keyword arguments passed to `data_module`.
         """
         self.config = config
         self.model_generator = model_generator
         self.fast_dev_run = fast_dev_run
         self.wandb_offline = wandb_offline
+        self.data_module = data_module
+        self.data_module_kwargs = data_module_kwargs
 
     def __call__(self, trial: optuna.Trial) -> Number:
         config = self.config.copy()
@@ -93,9 +99,7 @@ class Objective(object):
 
         logger.log_hyperparams(params)
 
-        data = DummyData(batch_size=config.BATCH_SIZE)
-
-        trainer.fit(pl_model, data)
+        trainer.fit(pl_model, self.data_module(config.BATCH_SIZE, **self.data_module_kwargs))
 
         logger.experiment.finish()
 
