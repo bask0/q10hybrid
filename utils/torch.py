@@ -51,7 +51,7 @@ def is_flat(x: Tensor) -> bool:
     Args:
         x (Tensor): the tensor.
     """
-    return x.ndim == 3
+    return x.ndim == 2
 
 
 def is_sequence(x: Tensor) -> bool:
@@ -60,7 +60,7 @@ def is_sequence(x: Tensor) -> bool:
     Args:
         x (Tensor): the tensor.
     """
-    return x.ndim == 2
+    return x.ndim == 3
 
 
 def seq2flat(x: Tensor) -> Tensor:

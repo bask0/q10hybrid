@@ -2,8 +2,8 @@
 from pytorch_lightning import seed_everything
 
 from project.model_configs import feedforward
-from utils.optuna_utils import Objective, get_study
-from utils.config_utils import BaseConfig
+from utils.optuna import Objective, get_study
+from utils.config import BaseConfig
 
 
 class HConfig(BaseConfig):

@@ -49,7 +49,8 @@ class DummyDataSequential(data.Dataset):
             self,
             num_epochs: int = 1000,
             seq_length: int = 20,
-            error_scale: float = 0.1):
+            error_scale: float = 0.1,
+            seq_last: bool = False):
         """This is a dummy dataset.
 
         Returns a x, y tuple:
@@ -64,12 +65,14 @@ class DummyDataSequential(data.Dataset):
             num_epochs (int): the epoch size. Defaults to 1'000.
             seq_length (int): the length of the simulated sequence. Defaults to 20.
             error_scale (float): the random normal error standard deviation. Defaults to 0.1.
-
+            seq_last (bool): If `False`, the sequence dimension is the second last dimension, and the feature dimension
+                is the first, else reversed. Defaults to `False`.
         """
 
         self.num_epochs = num_epochs
         self.seq_length = seq_length
         self.error_scale = error_scale
+        self.seq_last = seq_last
 
     def __len__(self):
         """The dataset length (number of samples), required.
@@ -82,6 +85,8 @@ class DummyDataSequential(data.Dataset):
     def __getitem__(self, idx: int):
         """Returns a single item corresponding to the index `ind`.
 
+        The target `y_[t]` is linear transformation of `x_[t-1]`.
+
         Args:
             idx (int): the index of the sample, in range [0, len(self)).
 
@@ -92,10 +97,16 @@ class DummyDataSequential(data.Dataset):
         y = 0.5 + 1.5 * x[:-1, :] + \
             np.random.normal(scale=self.error_scale, size=(self.seq_length, 1)).astype(np.float32)
 
-        return x[1:], y
+        x = x[1:]
+
+        if self.seq_last:
+            x = x.T
+            y = y.T
+
+        return x, y
 
 
-class DummyData(LightningDataModule):
+class DataSimple(LightningDataModule):
     def __init__(self, batch_size):
         super().__init__()
         self.batch_size = batch_size
@@ -110,7 +121,7 @@ class DummyData(LightningDataModule):
         return data.DataLoader(DummyDataSimple(), batch_size=self.batch_size)
 
 
-class DummyDataSequence(LightningDataModule):
+class DataSequetial(LightningDataModule):
     def __init__(self, batch_size):
         super().__init__()
         self.batch_size = batch_size
