@@ -98,8 +98,8 @@ class TemporalConvNet(nn.Module):
         Output: (batch_size, num_channels[-1], sequence_length)
 
     Args:
-        input_size (int): the mumber of input features.
-        hidden_size (int): the hidden size (intermediate channel sizes) of the layers.
+        num_inputs (int): the mumber of input features.
+        num_hidden (int): the hidden size (intermediate channel sizes) of the layers.
         kernel_size (int): the kernel size. Defaults to 4.
         num_layers (int): the number of stacked layers. Defaults to 2.
         dropout (float): a float value in the range [0, 1) that defines the dropout probability. Defaults to 0.0.
@@ -107,8 +107,8 @@ class TemporalConvNet(nn.Module):
 
     def __init__(
             self,
-            input_size: int,
-            hidden_size: int,
+            num_inputs: int,
+            num_hidden: int,
             kernel_size: int = 4,
             num_layers: int = 2,
             dropout: float = 0.0) -> None:
@@ -122,11 +122,11 @@ class TemporalConvNet(nn.Module):
         layers = []
         for i in range(num_layers):
             dilation_size = 2 ** i
-            in_channels = input_size if i == 0 else hidden_size
+            in_channels = num_inputs if i == 0 else num_hidden
             layers += [
                 TemporalBlock(
                     in_channels,
-                    hidden_size,
+                    num_hidden,
                     kernel_size,
                     stride=1,
                     dilation=dilation_size,
