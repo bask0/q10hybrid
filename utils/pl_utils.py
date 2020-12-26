@@ -124,7 +124,7 @@ class LightningNet(pl.LightningModule):
 
         lr_strat = LRStrategy(
             lr=self.lr,
-            weight_decay=0.001,
+            weight_decay=self.weight_decay,
             optimizer='adamw',
             scheduler='cosine'
         )
