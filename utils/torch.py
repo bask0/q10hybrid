@@ -45,7 +45,7 @@ def get_activation(activation: Union[str, None]) -> nn.Module:
         )
 
 
-def is_flat(x: Tensor):
+def is_flat(x: Tensor) -> bool:
     """Checks if tensor is in the flat format (batch, sequence x num_features)
 
     Args:
@@ -54,7 +54,7 @@ def is_flat(x: Tensor):
     return x.ndim == 3
 
 
-def is_sequence(x: Tensor):
+def is_sequence(x: Tensor) -> bool:
     """Checks if tensor is in the sequence format (batch, sequence, num_features)
 
     Args:
