@@ -13,7 +13,7 @@ def test_regression(fast_dev_run, resume=False, resume_version='latest'):
     study = get_study(config)
 
     study.optimize(
-        Objective(config, feedforward, wandb_offline=False),
+        Objective(config, feedforward, wandb_offline=True),
         n_trials=12 if fast_dev_run else 500)
 
     print('Best trial:')
