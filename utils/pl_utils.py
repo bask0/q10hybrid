@@ -64,10 +64,12 @@ class LightningNet(pl.LightningModule):
             optimizer='adamw',
             scheduler='cosine',
             num_warmup_batches: Union[int, str] = 'auto') -> None:
-        """Standard lightning module wrapping a PyTorch module.
+        """Standard lightning module, should be subclassed.
 
-        Note: this class should take hyperparameters regarding the training
-        process. Model hyperparameters should be handled in the PyTorch module.
+        Note:
+            * This class should take hyperparameters regarding the training process. Model hyperparameters should be
+                handled in the PyTorch module.
+            * call 'self.save_hyperparameters()' at the end of subclass `__init__()`.
 
         Learning strategy: there are many optimizer / learning rate scheduler
         combinations that work well in practie. The choices are limited here,
