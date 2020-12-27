@@ -71,7 +71,6 @@ class Objective(object):
         resume = config.get_latest_checkpoint()
 
         pl_model = self.model_generator(config, trial)
-        pl_model.save_hyperparameters()
 
         metrics_callback = MetricsCallback()
         trainer = pl.Trainer(
