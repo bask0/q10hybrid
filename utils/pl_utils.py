@@ -54,15 +54,7 @@ def get_training_config(
     return config
 
 
-class MetaSaveHyperparams(type):
-    def __call__(cls, *args, **kwargs):
-        """Checks attributes after initialization."""
-        obj = type.__call__(cls, *args, **kwargs)
-        obj.save_hyperparameters()
-        return obj
-
-
-class LightningNet(pl.LightningModule, metaclass=MetaSaveHyperparams):
+class LightningNet(pl.LightningModule):
     """Standard lightning module wrapping a PyTorch module."""
     def __init__(
             self,
@@ -108,8 +100,6 @@ class LightningNet(pl.LightningModule, metaclass=MetaSaveHyperparams):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.num_warmup_batches = num_warmup_batches
-
-        self
 
     def training_step(
             self,
