@@ -557,7 +557,7 @@ class LRStrategy():
                 `onecycle`}. Defaults to None.
             num_warmup_steps (Union[int, str], optional): the number of warmup
                 steps. Does not apply to all schedulers (cyclic and onecycle
-                do start at low lr anyway). Not warmup is done if `0`, one full
+                do start at low lr anyway). No warmup is done if `0`, one full
                 epoch (gradually increasing per batch) if `auto`. Defaults to
                 `auto`.
             num_cycles (int, optional): the number of cycles if a cyclic lr
