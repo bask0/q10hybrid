@@ -150,7 +150,8 @@ class TemporalConvNet(LightningNet):
         self.network = nn.Sequential(
             *layers,  # -> (batch, num_hidden, seq)
             transform,  # -> (batch, seq, num_hidden)
-            linear  # -> (batch, seq, num_out)
+            linear,  # -> (batch, seq, num_out)
+            transform,  # -> (batch, num_out, seq)
         )
 
         self.save_hyperparameters()
