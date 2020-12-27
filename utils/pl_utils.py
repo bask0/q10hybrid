@@ -10,7 +10,7 @@ from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 from functools import lru_cache
 from typing import Union, Iterable, Dict, Optional
 
-from project.optim import LRStrategy
+from utils.optim_utils import LRStrategy
 
 
 class LightningNet(pl.LightningModule):

@@ -9,8 +9,8 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from typing import Callable, Dict, Optional
 from numbers import Number
 
-from project.utils import BaseConfig
-from project.pl_utils import MetricsCallback
+from utils.config_utils import BaseConfig
+from utils.pl_utils import MetricsCallback
 
 
 class Objective(object):

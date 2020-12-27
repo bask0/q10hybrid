@@ -4,7 +4,7 @@ from torch import nn
 from torch import Tensor
 from typing import Optional
 
-from project.utils import get_activation
+from utils.torch_utils import get_activation
 
 
 class FeedForward(nn.Module):
