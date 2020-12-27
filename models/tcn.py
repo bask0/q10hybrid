@@ -31,6 +31,11 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 
+from typing import Dict
+
+from utils.pl_utils import LightningNet
+from utils.torch_utils import Transform
+
 
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size: int) -> None:
@@ -88,7 +93,7 @@ class TemporalBlock(nn.Module):
         return self.relu(out + res)
 
 
-class TemporalConvNet(nn.Module):
+class TemporalConvNet(LightningNet):
     """Implements a Temporal Convolutional Network (TCN).
 
     https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
@@ -98,7 +103,9 @@ class TemporalConvNet(nn.Module):
         Output: (batch_size, num_channels[-1], sequence_length)
 
     Args:
+        training_config (Dict): the training configuration passed to the superclass `LightningNet`.
         num_inputs (int): the mumber of input features.
+        num_intputs (int): the number of outputs.
         num_hidden (int): the hidden size (intermediate channel sizes) of the layers.
         kernel_size (int): the kernel size. Defaults to 4.
         num_layers (int): the number of stacked layers. Defaults to 2.
@@ -107,16 +114,15 @@ class TemporalConvNet(nn.Module):
 
     def __init__(
             self,
+            training_config: Dict,
             num_inputs: int,
+            num_outputs: int,
             num_hidden: int,
             kernel_size: int = 4,
             num_layers: int = 2,
-            dropout: float = 0.0) -> None:
+            dropout: float = 0.0,) -> None:
 
-        super().__init__()
-
-        # Needed do determine output size for downsteam layers.
-        self.num_hidden = num_hidden
+        super(TemporalConvNet, self).__init__(**training_config)
 
         # Used to calculate receptive field (`self.receptive_field_size`).
         self.kernel_size = kernel_size
@@ -137,7 +143,15 @@ class TemporalConvNet(nn.Module):
                     dropout=dropout)
             ]
 
-        self.network = nn.Sequential(*layers)
+        transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
+
+        linear = nn.Linear(num_hidden, num_outputs)
+
+        self.network = nn.Sequential(
+            *layers,  # -> (batch, num_hidden, seq)
+            transform,  # -> (batch, seq, num_hidden)
+            linear  # -> (batch, seq, num_out)
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run data through the model.

@@ -128,10 +128,10 @@ class DataSequential(LightningDataModule):
         self.seq_last = seq_last
 
     def train_dataloader(self):
-        return data.DataLoader(DummyDataSequential(), batch_size=self.batch_size, seq_last=self.seq_last)
+        return data.DataLoader(DummyDataSequential(seq_last=self.seq_last), batch_size=self.batch_size)
 
     def val_dataloader(self):
-        return data.DataLoader(DummyDataSequential(), batch_size=self.batch_size, seq_last=self.seq_last)
+        return data.DataLoader(DummyDataSequential(seq_last=self.seq_last), batch_size=self.batch_size)
 
     def test_dataloader(self):
-        return data.DataLoader(DummyDataSequential(), batch_size=self.batch_size, seq_last=self.seq_last)
+        return data.DataLoader(DummyDataSequential(seq_last=self.seq_last), batch_size=self.batch_size)

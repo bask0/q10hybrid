@@ -13,16 +13,65 @@ from typing import Union, Iterable, Dict, Optional
 from utils.optim_utils import LRStrategy
 
 
-class LightningNet(pl.LightningModule):
+def get_training_config(
+        lr: float,
+        weight_decay: float,
+        max_epochs: int,
+        optimizer: str = 'adamw',
+        scheduler: str = 'cosine',
+        num_warmup_batches: Union[int, str] = 'auto') -> Dict:
+    """Returns a training configuration that can be used as kwargs to `LightningNet`.
+
+    Args:
+        lr (float): the learning rate, > 0.0.
+        weight_decay (float): weight decay (L2 regulatizatiuon), > 0.0.
+        max_epochs (int): the number of epochs, used for learning rate schedulers.
+        optimizer (str): optimizer, one of `adamw`, `sgd` (see doc -> `Learninng stategy`
+            for more details). Defaults to `sgd`.
+        scheduler (str): learning rate scheduler, one of:
+            * `cosine`: CosineAnnealingWithWarmup
+            * `reduceonplateau`: ReduceLROnPlateauWithWarmup (currently not working)
+            * `cyclic`: CyclicLR scheduler
+            * `cyclic2`: CyclicLR scheduler
+            * `onecycle` OneCycleLR scheduler
+        num_warmup_batches (Union[int, str], optional): the number of warmup steps. Does not apply to all
+            schedulers (cyclic and onecycle do start at low lr anyway). No warmup is done if `0`, one full
+            epoch (gradually increasing per batch) if `auto`. Defaults to `auto`.
+
+    Returns:
+        Dict: [description]
+    """
+
+    config = dict(
+        lr=lr,
+        weight_decay=weight_decay,
+        max_epochs=max_epochs,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        num_warmup_batches=num_warmup_batches
+    )
+
+    return config
+
+
+class MetaSaveHyperparams(type):
+    def __call__(cls, *args, **kwargs):
+        """Checks attributes after initialization."""
+        obj = type.__call__(cls, *args, **kwargs)
+        obj.save_hyperparameters()
+        return obj
+
+
+class LightningNet(pl.LightningModule, metaclass=MetaSaveHyperparams):
     """Standard lightning module wrapping a PyTorch module."""
     def __init__(
             self,
-            model: nn.Module,
             lr: float,
             weight_decay: float,
             max_epochs: int,
-            learning_strategy: str = 'adamwr',
-            num_warmup_batches: Union[int, str] = 10) -> None:
+            optimizer='adamw',
+            scheduler='cosine',
+            num_warmup_batches: Union[int, str] = 'auto') -> None:
         """Standard lightning module wrapping a PyTorch module.
 
         Note: this class should take hyperparameters regarding the training
@@ -35,16 +84,20 @@ class LightningNet(pl.LightningModule):
         DOTO: hparam handling
 
         Args:
-            model (nn.Module): a PyTorch model.
             lr (float): the learning rate, > 0.0.
             weight_decay (float): weight decay (L2 regulatizatiuon), > 0.0.
-            max_epochs (int): the number of epochs, used for learning
-                rate schedulers.
-            learning_strategy (str): the learning strategy, one of `AdamWWR`,
-                `SGD` (see doc -> `Learnign stategy` for more details).
-                Defaults to `SGD`.
-            num_warmup_batches (int): number of warmup batches, the learning
-                rate is scaled from 0 to the the LR ins n steps.
+            max_epochs (int): the number of epochs, used for learning rate schedulers.
+            optimizer (str): optimizer, one of `adamw`, `sgd` (see doc -> `Learninng stategy`
+                for more details). Defaults to `sgd`.
+            scheduler (str): learning rate scheduler, one of:
+                * `cosine`: CosineAnnealingWithWarmup
+                * `reduceonplateau`: ReduceLROnPlateauWithWarmup (currently not working)
+                * `cyclic`: CyclicLR scheduler
+                * `cyclic2`: CyclicLR scheduler
+                * `onecycle` OneCycleLR scheduler
+            num_warmup_batches (Union[int, str], optional): the number of warmup steps. Does not apply to all
+                schedulers (cyclic and onecycle do start at low lr anyway). No warmup is done if `0`, one full
+                epoch (gradually increasing per batch) if `auto`. Defaults to `auto`.
         """
 
         super().__init__()
@@ -52,22 +105,11 @@ class LightningNet(pl.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
         self.max_epochs = max_epochs
+        self.optimizer = optimizer
+        self.scheduler = scheduler
         self.num_warmup_batches = num_warmup_batches
 
-        self.model = model
-
-        self.save_hyperparameters()
-
-    def forward(self, data: Tensor) -> Tensor:
-        """Model forward pass. Do not call directly.
-
-        Args:
-            data (Tensor): input data.
-
-        Returns:
-            Tensor: the model output.
-        """
-        return self.model(data)
+        self
 
     def training_step(
             self,
@@ -125,8 +167,8 @@ class LightningNet(pl.LightningModule):
         lr_strat = LRStrategy(
             lr=self.lr,
             weight_decay=self.weight_decay,
-            optimizer='adamw',
-            scheduler='cosine'
+            optimizer=self.optimizer,
+            scheduler=self.scheduler
         )
 
         optimizer = lr_strat.get_optimizer(self)

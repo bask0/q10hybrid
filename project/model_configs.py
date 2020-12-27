@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 from models.feedforward import FeedForward
 from models.tcn import TemporalConvNet
 
-from utils.pl_utils import LightningNet
+from utils.pl_utils import get_training_config
 from utils.config_utils import BaseConfig
 from utils.torch_utils import Transform
 
@@ -62,10 +62,15 @@ def feedforward(config: BaseConfig, trial: optuna.trial.Trial) -> pl.LightningMo
         activation=trial.suggest_categorical('activation', ['relu', 'none'])
     )
 
-    pl_model = LightningNet(
-        model=model,
+    training_config = get_training_config(
         lr=trial.suggest_loguniform('lr', 1e-3, 1e-0),
-        batch_size=config.BATCH_SIZE,
+        weight_decay=trial.suggest_loguniform('weight_decay', 1e-5, 1e-1),
+        max_epochs=config.MAX_EPOCHS)
+
+    pl_model = TemporalConvNet(
+        training_config=training_config,
+        lr=trial.suggest_loguniform('lr', 1e-3, 1e-0),
+        weight_decay=trial.suggest_loguniform('weight_decay', 1e-5, 1e-1),
         max_epochs=config.MAX_EPOCHS
     )
 
@@ -83,28 +88,19 @@ def tcn(config: BaseConfig, trial: optuna.trial.Trial) -> pl.LightningModule:
         pl.LightningModule: a lightning module.
     """
 
+    training_config = get_training_config(
+        lr=trial.suggest_loguniform('lr', 1e-3, 1e-0),
+        weight_decay=trial.suggest_loguniform('weight_decay', 1e-5, 1e-1),
+        max_epochs=config.MAX_EPOCHS)
+
     tcn = TemporalConvNet(
+        training_config=training_config,
         num_inputs=config.NUM_INPUTS,
+        num_outputs=config.NUM_OUTPUTS,
         num_hidden=trial.suggest_int('num_hidden', 1, 4),
         kernel_size=trial.suggest_int('kernel_size', 1, 4),
-        num_layers=trial.suggest_int('kernel_size', 1, 2),
+        num_layers=trial.suggest_int('num_layers', 1, 2),
         dropout=trial.suggest_float('dropout', 0.1, 0.3)
     )
 
-    transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
-
-    linear = nn.Linear(tcn.num_hidden, config.NUM_OUTPUTS)
-
-    model = nn.Sequential(
-        tcn,  # -> (batch, num_hidden, seq)
-        transform,  # -> (batch, seq, num_hidden)
-        linear  # -> (batch, seq, num_out)
-    )
-
-    pl_model = LightningNet(
-        model=model,
-        lr=trial.suggest_loguniform('lr', 1e-3, 1e-0),
-        max_epochs=config.MAX_EPOCHS
-    )
-
-    return pl_model
+    return tcn
