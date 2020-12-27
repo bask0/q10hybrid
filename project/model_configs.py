@@ -1,7 +1,6 @@
 """A collection of model configurations."""
 
 import optuna
-from torch import nn
 import pytorch_lightning as pl
 
 from models.feedforward import FeedForward
@@ -9,7 +8,6 @@ from models.tcn import TemporalConvNet
 
 from utils.pl_utils import get_training_config
 from utils.config_utils import BaseConfig
-from utils.torch_utils import Transform
 
 
 class Config(BaseConfig):
