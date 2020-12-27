@@ -121,7 +121,7 @@ class DataSimple(LightningDataModule):
         return data.DataLoader(DummyDataSimple(), batch_size=self.batch_size)
 
 
-class DataSequetial(LightningDataModule):
+class DataSequential(LightningDataModule):
     def __init__(self, batch_size, seq_last):
         super().__init__()
         self.batch_size = batch_size
