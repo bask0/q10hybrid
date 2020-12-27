@@ -600,16 +600,15 @@ class LRStrategy():
         return optimizer
 
     def get_num_warmup(self, batches_per_epoch):
-        if isinstance(self.num_warmup_steps, str):
-            if self.num_warmup_steps == 'auto':
-                return batches_per_epoch
-            elif isinstance(self.num_warmup_steps, int):
-                return self.num_warmup_steps
-            else:
-                raise ValueError(
-                    'argument `num_warmup_steps` must be an integer or '
-                    f'`auto`, is `{self.num_warmup_steps}`.'
-                )
+        if isinstance(self.num_warmup_steps, str) and self.num_warmup_steps == 'auto':
+            return batches_per_epoch
+        elif isinstance(self.num_warmup_steps, int):
+            return self.num_warmup_steps
+        else:
+            raise ValueError(
+                'argument `num_warmup_steps` must be an integer or '
+                f'`auto`, is `{self.num_warmup_steps}`.'
+            )
 
     def get_scheduler(
             self,
@@ -630,9 +629,9 @@ class LRStrategy():
         if scheduler == 'cosine':
             scheduler = CosineAnnealingLR(
                 optimizer,
-                T_max=max_steps - self.num_warmup_steps)
+                T_max=max_steps - num_warmup_steps)
             if num_warmup_steps > 0:
-                scheduler = self.add_warmup(optimizer, scheduler)
+                scheduler = self.add_warmup(optimizer, scheduler, num_warmup_steps)
 
         # elif scheduler == 'reduceonplateau':
         #     scheduler = ReduceLROnPlateau(optimizer)
@@ -698,11 +697,11 @@ class LRStrategy():
                     max_steps=num_training_steps,
                     batches_per_epoch=n_train)
 
-    def add_warmup(self, optimizer: Optimizer, scheduler: LRScheduler):
+    def add_warmup(self, optimizer: Optimizer, scheduler: LRScheduler, num_warmup_steps: int):
         return GradualWarmupScheduler(
             optimizer,
             multiplier=1.0,
-            num_epochs=self.num_warmup_steps,
+            num_epochs=num_warmup_steps,
             after_scheduler=scheduler
         )
 
