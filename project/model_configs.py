@@ -104,7 +104,6 @@ def tcn(config: BaseConfig, trial: optuna.trial.Trial) -> pl.LightningModule:
     pl_model = LightningNet(
         model=model,
         lr=trial.suggest_loguniform('lr', 1e-3, 1e-0),
-        batch_size=config.BATCH_SIZE,
         max_epochs=config.MAX_EPOCHS
     )
 
