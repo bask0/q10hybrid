@@ -153,14 +153,16 @@ class TemporalConvNet(LightningNet):
             linear  # -> (batch, seq, num_out)
         )
 
+        self.save_hyperparameters()
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run data through the model.
 
         Args:
-            x (torch.Tensor): the input data.
+            x (torch.Tensor): the input data with shape (batch, num_inputs, seq).
 
         Returns:
-            torch.Tensor: the model output.
+            torch.Tensor: the model output with shape (batch, seq, num_outputs).
         """
         return self.network(x)
 
