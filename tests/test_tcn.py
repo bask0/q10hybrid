@@ -3,7 +3,7 @@ from pytorch_lightning import seed_everything
 
 from project.model_configs import tcn, Config
 from utils.optuna_utils import Objective, get_study
-from tests.dummy_data import DataSequetial
+from dummy_data import DataSequential
 
 
 def test_tcn(fast_dev_run, resume=False, resume_version='latest'):
@@ -14,7 +14,7 @@ def test_tcn(fast_dev_run, resume=False, resume_version='latest'):
     study = get_study(config)
 
     study.optimize(
-        Objective(config, tcn, wandb_offline=True, data_module=DataSequetial, data_module_kwargs={'seq_last': True}),
+        Objective(config, tcn, wandb_offline=True, data_module=DataSequential, data_module_kwargs={'seq_last': True}),
         n_trials=12 if fast_dev_run else 500)
 
     print('Best trial:')
