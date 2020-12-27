@@ -604,7 +604,7 @@ class LRStrategy():
             if self.num_warmup_steps == 'auto':
                 return batches_per_epoch
             elif isinstance(self.num_warmup_steps, int):
-                return batches_per_epoch
+                return self.num_warmup_steps
             else:
                 raise ValueError(
                     'argument `num_warmup_steps` must be an integer or '
