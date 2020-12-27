@@ -96,7 +96,7 @@ def tcn(config: BaseConfig, trial: optuna.trial.Trial) -> pl.LightningModule:
         num_inputs=config.NUM_INPUTS,
         num_outputs=config.NUM_OUTPUTS,
         num_hidden=trial.suggest_int('num_hidden', 1, 4),
-        kernel_size=trial.suggest_int('kernel_size', 1, 4),
+        kernel_size=trial.suggest_int('kernel_size', 2, 4),
         num_layers=trial.suggest_int('num_layers', 1, 2),
         dropout=trial.suggest_float('dropout', 0.1, 0.3)
     )
