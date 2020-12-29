@@ -27,7 +27,7 @@ SOFTWARE.
 
 """
 
-import torch
+from torch import Tensor
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 
@@ -42,8 +42,28 @@ class Chomp1d(nn.Module):
         super(Chomp1d, self).__init__()
         self.chomp_size = chomp_size
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         return x[:, :, :-self.chomp_size].contiguous()
+
+
+class Residual(nn.Module):
+    def __init__(self, n_inputs: int, n_outputs: int) -> None:
+        """Residual connection, does downsampling if necessary.
+
+        Args:
+            n_inputs (int): layer input size (number of channels).
+            n_outputs (int): layer output size (number of channels).
+        """
+        super(Residual, self).__init__()
+        self.do_downsample = n_inputs != n_outputs
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if self.do_downsample else nn.Identity()
+
+    def forward(self, x: Tensor, res: Tensor) -> Tensor:
+        return x + self.downsample(res)
+
+    def init_weights(self) -> None:
+        if self.do_downsample:
+            self.downsample.weight.data.normal_(0, 0.01)
 
 
 class TemporalBlock(nn.Module):
@@ -72,25 +92,28 @@ class TemporalBlock(nn.Module):
         self.relu2 = nn.ReLU()
         self.dropout2 = nn.Dropout(dropout)
 
-        self.net = nn.Sequential(self.conv1, self.chomp1, self.relu1,
-                                 self.dropout1,
-                                 self.conv2, self.chomp2, self.relu2,
-                                 self.dropout2)
-        self.downsample = nn.Conv1d(n_inputs, n_outputs,
-                                    1) if n_inputs != n_outputs else None
+        self.res = Residual(n_inputs, n_outputs)
         self.relu = nn.ReLU()
         self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self) -> None:
         self.conv1.weight.data.normal_(0, 0.01)
         self.conv2.weight.data.normal_(0, 0.01)
-        if self.downsample is not None:
-            self.downsample.weight.data.normal_(0, 0.01)
+        self.res.init_weights()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        out = self.net(x)
-        res = x if self.downsample is None else self.downsample(x)
-        return self.relu(out + res)
+    def forward(self, x: Tensor) -> Tensor:
+        out = self.conv1(x)
+        out = self.chomp1(out)
+        out = self.relu1(out)
+        out = self.dropout1(out)
+
+        out = self.conv2(out)
+        out = self.chomp2(out)
+        out = self.relu2(out)
+        out = self.dropout2(out)
+
+        out = self.res(out, x)
+        return self.relu(out)
 
 
 class TemporalConvNet(LightningNet):
@@ -151,14 +174,14 @@ class TemporalConvNet(LightningNet):
 
         self.save_hyperparameters()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Run data through the model.
 
         Args:
-            x (torch.Tensor): the input data with shape (batch, num_inputs, seq).
+            x (Tensor): the input data with shape (batch, num_inputs, seq).
 
         Returns:
-            torch.Tensor: the model output with shape (batch, seq, num_outputs).
+            Tensor: the model output with shape (batch, seq, num_outputs).
         """
         out = self.tcn(x)
         out = self.transform(out)
@@ -177,8 +200,4 @@ class TemporalConvNet(LightningNet):
 
         """
 
-        size = 1
-        for n in range(self.num_layers):
-            current_size = (self.kernel_size - 1) * (2 ** n)
-            size += current_size
-        return size
+        return 1 + 2 * (self.kernel_size - 1) * (2 ** self.num_layers - 1)
