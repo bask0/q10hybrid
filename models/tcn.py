@@ -190,9 +190,11 @@ class TemporalConvNet(LightningNet):
 
         self.tcn = nn.Sequential(*layers)
 
-        self.transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
+        self.to_channel_last = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
 
         self.linear = nn.Linear(num_hidden, num_outputs)
+
+        self.to_sequence_last = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
 
         self.save_hyperparameters()
 
@@ -206,9 +208,9 @@ class TemporalConvNet(LightningNet):
             Tensor: the model output with shape (batch, seq, num_outputs).
         """
         out = self.tcn(x)
-        out = self.transform(out)
+        out = self.to_channel_last(out)
         out = self.linear(out)
-        out = self.transform(out)
+        out = self.to_sequence_last(out)
         return out
 
     def receptive_field_size(self) -> int:
