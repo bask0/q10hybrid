@@ -15,7 +15,7 @@ def test_tcn(fast_dev_run, resume=False, resume_version='latest'):
 
     study.optimize(
         Objective(config, tcn, wandb_offline=False, data_module=DataSequential, data_module_kwargs={'seq_last': True}),
-        n_trials=12 if fast_dev_run else 200)
+        n_trials=12 if fast_dev_run else 20)
 
     print('Best trial:')
     trial = study.best_trial
