@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import LearningRateMonitor
 
+import os
+import re
 from typing import Callable, Dict, Optional
 from numbers import Number
 
@@ -134,3 +136,69 @@ def get_study(config: BaseConfig, allow_resume=False):
         load_if_exists=True)
 
     return study
+
+
+def get_best_trial_dir(study: optuna.Study) -> str:
+    """Get best trial dir from a study.
+
+    Args:
+        study (optuna.Study): an optuna study.
+
+    Returns:
+        str: the best trial dir.
+    """
+    best_trial_dir = os.path.dirname(study.best_trial.user_attrs['LAST_CKPT_PATH'])
+    return best_trial_dir
+
+
+def get_best_trial_checkpoint(study: optuna.Study) -> str:
+    """Get checkpoint of best trial.
+
+    Note:
+        The function scans for the pattern `epoch=[int].ckpt` (pytorch lightning default) and takes the most recent 
+        one, i.e., the highest integer matching the pattern. This only works if the pytorch lightning Trainer saves
+        at least the 1 top (best) checkpoints (`pl.Trainer(..., save_top_k=1)`).
+
+    Args:
+        study (optuna.Study): an optuna study.
+
+    Raises:
+        ValueError: if directory is empty.
+        ValueError: if no matching checkpoint pattern.
+        AssertionError: if found pattern does not match any file (shouldn't happen).
+
+    Returns:
+        str: the best checkpoint path.
+    """
+    best_trial_dir = get_best_trial_dir(study)
+    files = os.listdir(best_trial_dir)
+
+    message = f'attempt to load best checkpoint from {"best"} failed. '
+
+    if len(files) == 0:
+        raise ValueError(
+            message +
+            'Directory is empty.'
+        )
+
+    epoch_nr = []
+    for f in files:
+        m = re.match(r'epoch=(\d+).ckpt', f)
+        if m is not None:
+            epoch_nr.append(int(m.group(1)))
+
+    if len(epoch_nr) == 0:
+        raise ValueError(
+            message +
+            'No checkpoints matching the pattern `epoch=[d].ckpt` found.'
+        )
+
+    best_epoch = f'epoch={max(epoch_nr)}.ckpt'
+
+    if best_epoch not in files:
+        raise AssertionError(
+            message +
+            f'no file matching the found best epoch `{best_epoch}`. Check source code.'
+        )
+
+    return os.path.join(best_trial_dir, best_epoch)
