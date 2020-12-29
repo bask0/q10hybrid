@@ -6,7 +6,7 @@ import numpy as np
 
 
 class DummyDataSimple(data.Dataset):
-    def __init__(self, num_epochs: int = 1000, error_scale: float = 0.1):
+    def __init__(self, num_samples: int = 1000, error_scale: float = 0.1):
         """This is a dummy dataset.
 
         Returns a x, y tuple:
@@ -14,11 +14,11 @@ class DummyDataSimple(data.Dataset):
             where x ~ N(0, 1), e ~ N(0, 0.1)
 
         Args:
-            num_epochs (int): the epoch size.
+            num_samples (int): the epoch size.
             error_scale (float): the random normal error standard deviation. Defaults to 0.1.
         """
 
-        self.num_epochs = num_epochs
+        self.num_samples = num_samples
         self.error_scale = error_scale
 
     def __len__(self):
@@ -27,7 +27,7 @@ class DummyDataSimple(data.Dataset):
         Returns:
             int: the length.
         """
-        return 1000
+        return self.num_samples
 
     def __getitem__(self, idx: int):
         """Returns a single item corresponding to the index `ind`.
@@ -47,7 +47,7 @@ class DummyDataSimple(data.Dataset):
 class DummyDataSequential(data.Dataset):
     def __init__(
             self,
-            num_epochs: int = 1000,
+            num_samples: int = 1000,
             seq_length: int = 20,
             error_scale: float = 0.1,
             seq_last: bool = False):
@@ -62,14 +62,14 @@ class DummyDataSequential(data.Dataset):
         An epoch has 1'000 samples.
 
         Attrs:
-            num_epochs (int): the epoch size. Defaults to 1'000.
+            num_samples (int): the epoch size. Defaults to 1'000.
             seq_length (int): the length of the simulated sequence. Defaults to 20.
             error_scale (float): the random normal error standard deviation. Defaults to 0.1.
             seq_last (bool): If `False`, the sequence dimension is the second last dimension, and the feature dimension
                 is the first, else reversed. Defaults to `False`.
         """
 
-        self.num_epochs = num_epochs
+        self.num_samples = num_samples
         self.seq_length = seq_length
         self.error_scale = error_scale
         self.seq_last = seq_last
@@ -80,7 +80,7 @@ class DummyDataSequential(data.Dataset):
         Returns:
             int: the length.
         """
-        return self.num_epochs
+        return self.num_samples
 
     def __getitem__(self, idx: int):
         """Returns a single item corresponding to the index `ind`.
