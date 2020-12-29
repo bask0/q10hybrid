@@ -149,12 +149,16 @@ class TemporalConvNet(LightningNet):
 
         https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
 
+        Note:
+            The TCN layer is followed by a feedfoward layer to map the TCN output channels to `num_outputs`.
+
         Shapes:
             Input:  (batch_size, input_size, sequence_length)
             Output: (batch_size, num_channels[-1], sequence_length)
 
         Args:
-            training_config (Dict): the training configuration passed to the superclass `LightningNet`.
+            training_config (Dict): the training configuration passed to the superclass `LightningNet`. This is at
+                least: `lr`, `weight_decay`, `max_epochs`.
             num_inputs (int): the mumber of input features.
             num_intputs (int): the number of outputs.
             num_hidden (int): the hidden size (intermediate channel sizes) of the layers.
