@@ -30,7 +30,7 @@ class Config(BaseConfig):
 
         self.BATCH_SIZE = batch_size
         self.MIN_EPOCHS = 1
-        self.MAX_EPOCHS = 5
+        self.MAX_EPOCHS = 40
 
         self.SEED = 23427
 
