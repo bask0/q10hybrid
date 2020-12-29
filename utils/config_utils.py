@@ -236,7 +236,7 @@ class BaseConfig(metaclass=MetaAttributesCheck):
 
     @property
     def LAST_CKPT_PATH(self) -> str:
-        return os.path.join(self.STUDY_DIR_VERSION, 'last.ckpt')
+        return os.path.join(self.TRIAL_DIR, 'last.ckpt')
 
     @property
     def resume_policy(self) -> Union[str, bool]:
