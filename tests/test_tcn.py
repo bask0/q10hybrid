@@ -14,8 +14,8 @@ def test_tcn(fast_dev_run, resume=False, resume_version='latest'):
     study = get_study(config)
 
     study.optimize(
-        Objective(config, tcn, wandb_offline=True, data_module=DataSequential, data_module_kwargs={'seq_last': True}),
-        n_trials=12 if fast_dev_run else 500)
+        Objective(config, tcn, wandb_offline=False, data_module=DataSequential, data_module_kwargs={'seq_last': True}),
+        n_trials=12 if fast_dev_run else 200)
 
     print('Best trial:')
     trial = study.best_trial
@@ -33,4 +33,4 @@ def test_tcn(fast_dev_run, resume=False, resume_version='latest'):
 
 
 if __name__ == "__main__":
-    test_tcn(True, resume=True)
+    test_tcn(False, resume=True)
