@@ -76,6 +76,17 @@ class TemporalBlock(nn.Module):
             dilation: int,
             padding: int,
             dropout: float = 0.2) -> None:
+        """Implements a two-layered residual block.
+
+        Args:
+            n_inputs (int): number of inputs (channels).
+            n_outputs (int): number of outputs (channels).
+            kernel_size (int): the 1D convolution kernel size.
+            stride (int): the 1D convolution stride.
+            dilation (int): the 1D convolution dilation.
+            padding (int): the padding.
+            dropout (float, optional): the dropout applied after each layer. Defaults to 0.2.
+        """
 
         super(TemporalBlock, self).__init__()
         self.conv1 = weight_norm(nn.Conv1d(n_inputs, n_outputs, kernel_size,
@@ -102,6 +113,14 @@ class TemporalBlock(nn.Module):
         self.res.init_weights()
 
     def forward(self, x: Tensor) -> Tensor:
+        """Model forward run.
+
+        Args:
+            x (Tensor): the input tensor.
+
+        Returns:
+            Tensor: the output tensor.
+        """
         out = self.conv1(x)
         out = self.chomp1(out)
         out = self.relu1(out)
@@ -117,24 +136,6 @@ class TemporalBlock(nn.Module):
 
 
 class TemporalConvNet(LightningNet):
-    """Implements a Temporal Convolutional Network (TCN).
-
-    https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
-
-    Shapes:
-        Input:  (batch_size, input_size, sequence_length)
-        Output: (batch_size, num_channels[-1], sequence_length)
-
-    Args:
-        training_config (Dict): the training configuration passed to the superclass `LightningNet`.
-        num_inputs (int): the mumber of input features.
-        num_intputs (int): the number of outputs.
-        num_hidden (int): the hidden size (intermediate channel sizes) of the layers.
-        kernel_size (int): the kernel size. Defaults to 4.
-        num_layers (int): the number of stacked layers. Defaults to 2.
-        dropout (float): a float value in the range [0, 1) that defines the dropout probability. Defaults to 0.0.
-    """
-
     def __init__(
             self,
             training_config: Dict,
@@ -143,7 +144,24 @@ class TemporalConvNet(LightningNet):
             num_hidden: int,
             kernel_size: int = 4,
             num_layers: int = 2,
-            dropout: float = 0.0,) -> None:
+            dropout: float = 0.0) -> None:
+        """Implements a Temporal Convolutional Network (TCN).
+
+        https://github.com/locuslab/TCN/blob/master/TCN/tcn.py
+
+        Shapes:
+            Input:  (batch_size, input_size, sequence_length)
+            Output: (batch_size, num_channels[-1], sequence_length)
+
+        Args:
+            training_config (Dict): the training configuration passed to the superclass `LightningNet`.
+            num_inputs (int): the mumber of input features.
+            num_intputs (int): the number of outputs.
+            num_hidden (int): the hidden size (intermediate channel sizes) of the layers.
+            kernel_size (int): the kernel size. Defaults to 4.
+            num_layers (int): the number of stacked layers. Defaults to 2.
+            dropout (float): a float value in the range [0, 1) that defines the dropout probability. Defaults to 0.0.
+        """
 
         super(TemporalConvNet, self).__init__(**training_config)
 
