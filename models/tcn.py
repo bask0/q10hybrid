@@ -143,16 +143,11 @@ class TemporalConvNet(LightningNet):
                     dropout=dropout)
             ]
 
-        transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
+        self.tcn = nn.Sequential(*layers)
 
-        linear = nn.Linear(num_hidden, num_outputs)
+        self.transform = Transform(transform_fun=lambda x: x.permute(0, 2, 1))
 
-        self.network = nn.Sequential(
-            *layers,  # -> (batch, num_hidden, seq)
-            transform,  # -> (batch, seq, num_hidden)
-            linear,  # -> (batch, seq, num_out)
-            transform,  # -> (batch, num_out, seq)
-        )
+        self.linear = nn.Linear(num_hidden, num_outputs)
 
         self.save_hyperparameters()
 
@@ -165,7 +160,11 @@ class TemporalConvNet(LightningNet):
         Returns:
             torch.Tensor: the model output with shape (batch, seq, num_outputs).
         """
-        return self.network(x)
+        out = self.tcn(x)
+        out = self.transform(out)
+        out = self.linear(out)
+        out = self.transform(out)
+        return out
 
     def receptive_field_size(self) -> int:
         """Returns the receptive field of the Module.
