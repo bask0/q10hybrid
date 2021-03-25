@@ -413,7 +413,7 @@ class LRStrategy():
     In an effort to reducte the options, some scheduler arguments are
     hard-coded.
 
-    ToDo: currently, AdamW foes only work with cyclic if cycle_momentum=False.
+    ToDo: currently, AdamW does only work with cyclic if cycle_momentum=False.
 
     Optimizers:
     ---------------------------------------------------------------------------
