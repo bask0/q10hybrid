@@ -135,7 +135,7 @@ class Q10Model(pl.LightningModule):
         # Iterate results from each validation step.
         for item in validation_step_outputs:
             reco_hat = item['reco_hat'][:, 0]
-            rb_hat = item['rb_hat'][:, 0]        
+            rb_hat = item['rb_hat'][:, 0]   
             idx = item['idx']
 
             # Assign predictions to the right time steps.
