@@ -21,6 +21,7 @@ class Q10Model(pl.LightningModule):
             targets: List[str],
             norm: Normalize,
             ds: xr.Dataset,
+            q10_init: int = 1.5,
             hidden_dim: int = 128,
             num_layers: int = 2,
             dropout: float = 0.0,
@@ -33,10 +34,21 @@ class Q10Model(pl.LightningModule):
         """
 
         super().__init__()
-        self.save_hyperparameters('features', 'targets', 'hidden_dim', 'learning_rate')
+        self.save_hyperparameters(
+            'features',
+            'targets',
+            'q10_init',
+            'hidden_dim',
+            'num_layers',
+            'dropout',
+            'activation',
+            'learning_rate',
+        )
 
         self.features = features
         self.targets = targets
+
+        self.q10_init = q10_init
 
         self.input_norm = norm.get_normalizaion_layer(variables=self.features, invert=False, stack=True)
         self.nn = FeedForward(
@@ -52,7 +64,7 @@ class Q10Model(pl.LightningModule):
 
         self.criterion = torch.nn.MSELoss()
 
-        self.q10 = torch.nn.Parameter(torch.ones(1))
+        self.q10 = torch.nn.Parameter(torch.ones(1) * self.q10_init)
         self.ta_ref = 15.0
 
         # Used for strring results.
@@ -144,5 +156,7 @@ class Q10Model(pl.LightningModule):
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--hidden_dim', type=int, default=16)
+        parser.add_argument('--num_layers', type=int, default=2)
+        parser.add_argument('--q10_init', default=1.0, type=float)
         parser.add_argument('--learning_rate', type=float, default=0.001)
         return parser
