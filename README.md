@@ -23,9 +23,9 @@ Use `analysis/analysis.ipynb` for evaluation.
 
 #### First results
 
-![training progress](./analysis/plots/predictions.png)
+![training progress](/analysis/plots/predictions.png)
 
-![training progress](./analysis/plots/q10.png)
+![training progress](/analysis/plots/q10.png)
 
 ## Experiment 2
 
