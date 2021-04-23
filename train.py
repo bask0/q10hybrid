@@ -22,7 +22,7 @@ def cli_main():
     # Some default arguments (not best practice but cannot use `add_argument`).
     args = parser.parse_args(
         [
-            '--limit_train_batches', '0.1', # Small training set size because we monitor predictions.
+            '--limit_train_batches', '0.1',  # Small training set size because we monitor predictions.
             '--max_epochs', '15',
             '--log_every_n_steps', '1'
         ]
