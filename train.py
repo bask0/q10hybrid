@@ -3,6 +3,7 @@ import xarray as xr
 from argparse import ArgumentParser
 import pytorch_lightning as pl
 import os
+from datetime import datetime
 
 from project.fluxdata import FluxData
 from models.hybrid import Q10Model
@@ -75,11 +76,7 @@ def cli_main():
     # ------------
     # training
     # ------------
-    trainer = pl.Trainer.from_argparse_args(
-        args,
-        limit_train_batches=0.1,
-        max_epochs=25,
-        log_every_n_steps=1)
+    trainer = pl.Trainer.from_argparse_args(args)
     trainer.fit(model, train_loader, val_loader)
 
     # ------------
@@ -90,8 +87,17 @@ def cli_main():
     # ------------
     # save results
     # ------------
-    # Save data.
+    # Store predictions.
     ds = fluxdata.add_scalar_record(model.ds, varname='q10', x=model.q10_history)
+
+    # Add some attributes that are required for analysis.
+    ds.attrs = {
+        'created': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'author': 'bkraft@bgc-jena.mpg.de'
+    }
+    ds.q10.attrs = {'q10_init': args.q10_init}
+
+    # Save data.
     save_dir = os.path.join(model.logger.log_dir, 'predictions.nc')
     print(f'Saving predictions to: {save_dir}')
     ds.to_netcdf(save_dir)
