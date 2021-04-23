@@ -15,18 +15,24 @@ class FeedForward(nn.Module):
     last layer are optional (see `activation_last` and `dropout_last`).
 
     Args:
-        num_inputs (int): input dimensionality
-        num_outputs (int): output dimensionality
-        num_hidden (int): number of hidden units
-        num_layers (int): number of fully-connected layers
-        dropout (float): dropout applied after each layer, in range [0, 1)
-        activation (torch activation): activation function
-        activation_last (torch actiation, optional): if not `None`, this
-            activation is applied after the last layer. Defaults to None.
-        dropout_last (bool, optional): If `True`, the dropout is also
-            applied after last layer. Defaults to False.
-        layer_norm (bool): Wheter to use layer normalizations in all but the
-            last layer. Defaults to `False`.
+        num_inputs (int):
+            Input dimensionality.
+        num_outputs (int):
+            Output dimensionality.
+        num_hidden (int):
+            Number of hidden units.
+        num_layers (int):
+            Number of fully-connected layers.
+        dropout (float):
+            Dropout applied after each layer, in range [0, 1).
+        activation (str):
+            Activation function name.
+        activation_last (str, optional):
+            If not `None`, this activation is applied after the last layer. Defaults to `None`.
+        dropout_last (bool, optional):
+            If `True`, the dropout is also applied after last layer. Defaults to `False`.
+        layer_norm (bool):
+            Wheter to use layer normalizations in all but the last layer. Defaults to `False`.
 
     """
     def __init__(
@@ -36,7 +42,7 @@ class FeedForward(nn.Module):
             num_hidden: int,
             num_layers: int,
             dropout: float,
-            activation: torch.nn.Module,
+            activation: str,
             activation_last: Optional[torch.nn.Module] = None,
             dropout_last: bool = False,
             layer_norm: bool = False) -> None:
@@ -81,7 +87,8 @@ class FeedForward(nn.Module):
         """Mode lforward call.
 
         Args:
-            x (Tensor): the input tensor.
+            x (Tensor):
+                The input tensor.
 
         Returns:
             Tensor: the output tensor.

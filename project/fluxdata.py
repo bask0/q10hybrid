@@ -62,7 +62,9 @@ class FDataset(Dataset):
                 The index of the sample, in range [0, len(self)).
 
         Returns:
-            Tuple: a tuple of tensors of shape (featues, context_size), (targrets, 1).
+            Tuple:
+                - Data (Dict[str, torch.Tensor]): features and targets, each with shape (1, context_size)
+                - Time index (torch.Tensor): the time index corresponding to the data.
         """
 
         time = self._ind2coord_lookup[idx]
@@ -72,15 +74,15 @@ class FDataset(Dataset):
         return {var: ds_site_x[var].values.astype('float32') for var in self._variables}, idx
 
     @property
-    def num_features(self):
+    def num_features(self) -> int:
         return len(self._features)
 
     @property
-    def num_targets(self):
+    def num_targets(self) -> int:
         return len(self._targets)
 
     @property
-    def num_variables(self):
+    def num_variables(self) -> int:
         return self.num_features + self.num_targets
 
 
@@ -107,8 +109,6 @@ class FluxData(LightningDataModule):
             test data.
         batch_size (int):
             The batch size.
-        seed (int, optional):
-            The random seed. Defaults to 0.
         data_loader_kwargs (Dict, optional):
             Keyword arguments passed to Dataloader when calling one of the
             `[set]_dataloader` methods. Defaults is passing no further arguments.
@@ -123,7 +123,6 @@ class FluxData(LightningDataModule):
             test_time: slice,
             context_size: int,
             batch_size: int,
-            seed: int = 0,
             data_loader_kwargs: Dict = {}) -> None:
 
         super().__init__()
@@ -137,8 +136,6 @@ class FluxData(LightningDataModule):
         self._context_size = context_size
         self._batch_size = batch_size
         self._data_loader_kwargs = data_loader_kwargs
-
-        self._random = np.random.RandomState(seed)
 
         self._ds_train = self._ds.sel(time=self._train_time).load()
         self._ds_valid = self._ds.sel(time=self._valid_time).load()
@@ -240,6 +237,13 @@ class FluxData(LightningDataModule):
         return ds_new
 
     def add_scalar_record(self, ds: xr.Dataset, varname: str, x: Iterable) -> xr.Dataset:
+
+        if isinstance(x, Tensor):
+            x = x.detach().cpu().numpy()
+
+        # Cut excess entries (NaNs).
+        x = x[:x.argmin()]
+
         if 'iter' not in ds.coords:
             ds = ds.assign_coords({'iter': np.arange(len(x))})
         else:
