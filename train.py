@@ -9,24 +9,19 @@ from models.hybrid import Q10Model
 
 
 def cli_main():
-    pl.seed_everything(1234)
-
     # ------------
     # args
     # ------------
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--batch_size', default=160, type=int)
+    parser.add_argument('--seed', default=0, type=int)
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
 
     # Some default arguments (not best practice but cannot use `add_argument`).
-    args = parser.parse_args(
-        [
-            '--limit_train_batches', '0.1',  # Small training set size because we monitor predictions.
-            '--max_epochs', '15',
-            '--log_every_n_steps', '1'
-        ]
-    )
+    args = parser.parse_args()
+
+    pl.seed_everything(args.seed)
 
     # These are the inputs to the NN.
     features = ['sw_pot', 'dsw_pot']
@@ -72,13 +67,19 @@ def cli_main():
         targets=targets,
         norm=fluxdata._norm,
         ds=ds_pred,
+        q10_init=args.q10_init,
         hidden_dim=args.hidden_dim,
+        num_layers=args.num_layers,
         learning_rate=args.learning_rate)
 
     # ------------
     # training
     # ------------
-    trainer = pl.Trainer.from_argparse_args(args)
+    trainer = pl.Trainer.from_argparse_args(
+        args,
+        limit_train_batches=0.1,
+        max_epochs=25,
+        log_every_n_steps=1)
     trainer.fit(model, train_loader, val_loader)
 
     # ------------
