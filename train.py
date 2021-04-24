@@ -16,6 +16,7 @@ def cli_main():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--batch_size', default=160, type=int)
     parser.add_argument('--seed', default=0, type=int)
+    parser.add_argument('--data_path', default=0, type=int)
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
 
@@ -39,7 +40,7 @@ def cli_main():
     # ------------
     # data
     # ------------
-    ds = xr.open_dataset('/Users/bk/Files/usmile/data/q10/Synthetic4BookChap.nc')
+    ds = xr.open_dataset(args.data_path)
 
     fluxdata = FluxData(
         ds,
