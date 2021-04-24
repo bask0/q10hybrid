@@ -13,13 +13,17 @@ Q10 hybrid modeling experiment for a book chapter.
 
 ## How to run
 
-First, install dependencies
+First, install dependencies.
 
 ```bash
 # clone project
 git clone https://github.com/bask0/q10hybrid
 
-# install project   
+# Optional: create and activate new conda environment.
+conda create --name q10hybrid
+conda activate q10hybrid
+
+# install project
 cd q10hybrid
 pip install -e .   
 pip install -r requirements.txt
