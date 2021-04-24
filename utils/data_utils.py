@@ -382,7 +382,7 @@ class Normalize(object):
         n._set_stats(d)
         return n
 
-    def get_normalizaion_layer(
+    def get_normalization_layer(
             self_,
             variables: Union[List[str], str],
             invert: bool,
