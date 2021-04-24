@@ -9,9 +9,10 @@ if os.path.isdir(log_dir):
 fix_args = [
     # '--fast_dev_run 1'
     '--limit_train_batches 0.1',
-    '--max_epochs 25',
+    '--max_epochs 15',
     '--log_every_n_steps 1',
-    f'--default_root_dir {log_dir}'
+    f'--default_root_dir {log_dir}',
+    '--learning_rate 0.005'
 ]
 
 cmd = 'python train.py ' + ' '.join(fix_args)
