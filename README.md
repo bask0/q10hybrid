@@ -20,23 +20,20 @@ First, install dependencies.
 git clone https://github.com/bask0/q10hybrid
 
 # Optional: create and activate new conda environment.
-conda create --name q10hybrid
+conda create --name q10hybrid python=3.6
 conda activate q10hybrid
 
 # install project
 cd q10hybrid
-pip install -e .   
+pip install -e .
 pip install -r requirements.txt
 ```
 
-Next, navigate to any file and run it.
+Run experiments.
 
 ```bash
-# module folder
-cd experiments
-
-# run module (example: mnist as your main contribution)   
-python experiment_01.py    
+# run experiment 1
+python experiments/experiment_01.py
 ```
 
 ## Q10 hybrid modeling experiment
