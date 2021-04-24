@@ -16,7 +16,7 @@ def cli_main():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--batch_size', default=160, type=int)
     parser.add_argument('--seed', default=0, type=int)
-    parser.add_argument('--data_path', default=0, type=int)
+    parser.add_argument('--data_path', type=str)
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
 
