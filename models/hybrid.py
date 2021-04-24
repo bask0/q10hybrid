@@ -50,7 +50,7 @@ class Q10Model(pl.LightningModule):
 
         self.q10_init = q10_init
 
-        self.input_norm = norm.get_normalizaion_layer(variables=self.features, invert=False, stack=True)
+        self.input_norm = norm.get_normalization_layer(variables=self.features, invert=False, stack=True)
         self.nn = FeedForward(
             num_inputs=len(self.features),
             num_outputs=len(self.targets),
@@ -59,8 +59,8 @@ class Q10Model(pl.LightningModule):
             dropout=dropout,
             activation=activation
         )
-        self.target_norm = norm.get_normalizaion_layer(variables=self.targets, invert=False, stack=True)
-        self.target_denorm = norm.get_normalizaion_layer(variables=self.targets, invert=True, stack=True)
+        self.target_norm = norm.get_normalization_layer(variables=self.targets, invert=False, stack=True)
+        self.target_denorm = norm.get_normalization_layer(variables=self.targets, invert=True, stack=True)
 
         self.criterion = torch.nn.MSELoss()
 
@@ -155,7 +155,7 @@ class Q10Model(pl.LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--hidden_dim', type=int, default=16)
+        parser.add_argument('--hidden_dim', type=int, default=8)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--q10_init', default=1.0, type=float)
         parser.add_argument('--learning_rate', type=float, default=0.001)
