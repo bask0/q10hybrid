@@ -134,9 +134,9 @@ class Q10Model(pl.LightningModule):
     def validation_epoch_end(self, validation_step_outputs) -> None:
         # Iterate results from each validation step.
         for item in validation_step_outputs:
-            reco_hat = item['reco_hat'][:, 0]
-            rb_hat = item['rb_hat'][:, 0]   
-            idx = item['idx']
+            reco_hat = item['reco_hat'][:, 0].cpu()
+            rb_hat = item['rb_hat'][:, 0].cpu()
+            idx = item['idx'].cpu()
 
             # Assign predictions to the right time steps.
             self.ds['reco_pred'].values[self.current_epoch, idx] = reco_hat
