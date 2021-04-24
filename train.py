@@ -51,7 +51,7 @@ def cli_main():
         valid_time=slice('2007-01-01', '2007-12-31'),
         test_time=slice('2008-01-01', '2008-12-31'),
         batch_size=args.batch_size,
-        data_loader_kwargs={'num_workers': 2})
+        data_loader_kwargs={'num_workers': 4})
 
     train_loader = fluxdata.train_dataloader()
     val_loader = fluxdata.val_dataloader()
