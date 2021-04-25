@@ -20,7 +20,7 @@ First, install dependencies.
 git clone https://github.com/bask0/q10hybrid
 
 # Optional: create and activate new conda environment.
-conda create --name q10hybrid python=3.6
+conda create --yes --name q10hybrid python=3.6
 conda activate q10hybrid
 
 # install project
