@@ -29,11 +29,18 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-Run experiments.
+Run experiments:
 
 ```bash
-# run experiment 1
-python experiments/experiment_01.py
+# start first process on GPU 0 (--restart deletes existing runs)
+CUDA_VISIBLE_DEVICES=0 python experiments/experiment_01.py --restart
+```
+
+To work on independent runs in parallel, just call the study again from another terminal, **without `--restart`**!
+
+```bash
+# start a second process on GPU 1
+CUDA_VISIBLE_DEVICES=1 python experiments/experiment_01.py
 ```
 
 ## Q10 hybrid modeling experiment
