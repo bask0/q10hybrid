@@ -4,7 +4,7 @@ torchvision >= 0.6.0
 optuna
 xarray
 netCDF4
-dask
+dask[array]
 ipython
 ipykernel
 matplotlib
