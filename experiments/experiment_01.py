@@ -114,6 +114,7 @@ class Objective(object):
             'author': 'bkraft@bgc-jena.mpg.de'
         }
         ds.q10.attrs = {'q10_init': q10_init, 'features': features}
+        ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
         # Save data.
         save_dir = os.path.join(model.logger.log_dir, 'predictions.nc')
