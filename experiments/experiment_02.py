@@ -90,7 +90,7 @@ class Objective(object):
         # ------------
         trainer = pl.Trainer.from_argparse_args(
             self.args,
-            default_root_dir=(self.args.log_dir,
+            default_root_dir=self.args.log_dir,
             **TRAINER_ARGS)
         trainer.fit(model, train_loader, val_loader)
 
