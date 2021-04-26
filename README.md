@@ -29,6 +29,20 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
+## Q10 hybrid modeling experiment
+
+Base respiratino is simulated using observed short-wave irradiation and the delta thereof. Ecosyste respiration is calculated using the [Q10 approach](https://en.wikipedia.org/wiki/Q10_(temperature_coefficient)).
+
+<img src="https://render.githubusercontent.com/render/math?math=Rb_\mathrm{syn} = f(W_\mathrm{in, pot}, \Delta SW_\mathrm{in, pot})"><br>
+
+<img src="https://render.githubusercontent.com/render/math?math=RECO_\mathrm{syn} = Rb_\mathrm{syn} \cdot 1.5^{0.1 \cdot (TA - 15.0)}">
+
+## Experiment 1
+
+Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). Due to equifinality, the variant with T is supposed to produe unstable Q10 estimates.
+
+#### Usage
+
 Run experiments:
 
 ```bash
@@ -43,37 +57,15 @@ To work on independent runs in parallel, just call the study again from another 
 CUDA_VISIBLE_DEVICES=1 python experiments/experiment_01.py
 ```
 
-## Q10 hybrid modeling experiment
-
-Base respiratino is simulated using observed short-wave irradiation and the delta thereof. Ecosyste respiration is calculated using the [Q10 approach](https://en.wikipedia.org/wiki/Q10_(temperature_coefficient)).
-
-<img src="https://render.githubusercontent.com/render/math?math=Rb_\mathrm{syn} = f(W_\mathrm{in, pot}, \Delta SW_\mathrm{in, pot})"><br>
-
-<img src="https://render.githubusercontent.com/render/math?math=RECO_\mathrm{syn} = Rb_\mathrm{syn} \cdot 1.5^{0.1 \cdot (TA - 15.0)}">
-
-## Experiment 1
-
-[in development]
-
-Estimate Q10 and Rb=NN(SW_in, dSW_in).
-
-#### Usage
-
-Run model: `python train.py`
-
-No options implemented yet, just hybrid model run. Outputs will be written to `lightning_logs/version_xx/`. Predictions are saved as `lightning_logs/version_xx/predictions.nc`.
-
 Use `analysis/analysis.ipynb` for evaluation.
 
-#### First results
+#### Results 
 
-![training progress](/analysis/plots/predictions.png)
+![training progress](/analysis/plots/training_progress.png)
 
-![training progress](/analysis/plots/q10.png)
+## Experiment 2
 
-### Experiment 2
-
-
+[work in progress]
 
 ### Citation
 
