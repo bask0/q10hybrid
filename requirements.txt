@@ -9,3 +9,4 @@ ipython
 ipykernel
 matplotlib
 plotly
+seaborn
