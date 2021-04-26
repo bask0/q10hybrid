@@ -8,3 +8,4 @@ dask[array]
 ipython
 ipykernel
 matplotlib
+plotly
