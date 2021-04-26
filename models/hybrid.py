@@ -152,10 +152,20 @@ class Q10Model(pl.LightningModule):
         self.log('test_loss', loss)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
-        return torch.optim.AdamW(
-            self.parameters(),
-            lr=self.hparams.learning_rate,
-            weight_decay=self.hparams.weight_decay)
+        optimizer = torch.optim.AdamW(
+                [
+                    {
+                        'params': self.nn.parameters(),
+                        'lr': self.hparams.learning_rate,
+                        'weight_decay': self.hparams.weight_decay
+                    },
+                    {
+                        'params': [self.q10],
+                        'lr': self.hparams.learning_rate,
+                        'weight_decay': 0.0
+                    }]
+            )
+        return optimizer
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
