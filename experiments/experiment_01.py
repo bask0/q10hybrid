@@ -72,7 +72,7 @@ class Objective(object):
         test_loader = fluxdata.test_dataloader()
 
         # Create empty xr.Dataset, will be used by the model to save predictions every epoch.
-        max_epochs = self.args.max_epochs if self.args.max_epochs is not None else 500
+        max_epochs = TRAINER_ARGS['max_epochs']
         ds_pred = fluxdata.target_xr('valid', varnames=['reco', 'rb'], num_epochs=max_epochs)
 
         # ------------
