@@ -27,9 +27,9 @@ class Objective(object):
         self.args = args
 
     def __call__(self, trial: optuna.trial.Trial) -> float:
-        q10_init = trial.suggest_float('q10_init', 0.5, 2.5)
-        seed = trial.suggest_int('seed', 0, 9)
-        weight_decay = trial.suggest_float('weight_decay', 0, 0.1)
+        q10_init = trial.suggest_float('q10_init', 0.0001, 1000.)
+        seed = trial.suggest_int('seed', 0, 999999999999)
+        weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
         features = 'sw_pot, dsw_pot, ta'
         features_parsed = features.split(', ')
 
@@ -154,7 +154,7 @@ def main():
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
         'seed': [i for i in range(10)],
-        'weight_decay': [0.0001, 0.001, 0.1]
+        'weight_decay': [0.001, 0.01, 0.1, 1.0]
     }
     sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
 
