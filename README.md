@@ -3,7 +3,7 @@ Author: B. Kraft [bkraf@bgc-jena.mpg.de]
 
 <div align="center">
 
-# Hybrid modeling of ecosystem respiration temperature sensiticity
+# Hybrid modeling of ecosystem respiration temperature sensitivity
 
 </div><br><br>
 
