@@ -114,6 +114,7 @@ class Objective(object):
             'q10_init': q10_init,
             'weight_decay': weight_decay
         }
+        ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
         # Save data.
         save_dir = os.path.join(model.logger.log_dir, 'predictions.nc')
