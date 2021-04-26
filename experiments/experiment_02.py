@@ -21,6 +21,7 @@ TRAINER_ARGS = dict(
     weights_summary=None
 )
 
+
 class Objective(object):
     def __init__(self, args):
         self.args = args
