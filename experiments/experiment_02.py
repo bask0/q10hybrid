@@ -33,11 +33,6 @@ class Objective(object):
         features = 'sw_pot, dsw_pot, ta'
         features_parsed = features.split(', ')
 
-        if 'ta' in features_parsed:
-            log_dir = os.path.join(self.args.log_dir, 'w_ta')
-        else:
-            log_dir = os.path.join(self.args.log_dir, 'n_ta')
-
         pl.seed_everything(seed)
 
         # These are the inputs to the NN.
@@ -115,7 +110,10 @@ class Objective(object):
             'created': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'author': 'bkraft@bgc-jena.mpg.de'
         }
-        ds.q10.attrs = {'q10_init': q10_init, 'features': features}
+        ds.q10.attrs = {
+            'q10_init': q10_init,
+            'weight_decay': weight_decay
+        }
 
         # Save data.
         save_dir = os.path.join(model.logger.log_dir, 'predictions.nc')
