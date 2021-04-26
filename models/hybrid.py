@@ -24,9 +24,10 @@ class Q10Model(pl.LightningModule):
             q10_init: int = 1.5,
             hidden_dim: int = 128,
             num_layers: int = 2,
-            dropout: float = 0.0,
+            dropout: float = 0.,
             activation='relu',
-            learning_rate: int = 1e-3) -> None:
+            learning_rate: float = 1e-3,
+            weight_decay: float = 0.) -> None:
         """Hybrid Q10 model.
 
         Note that restoring is not working currently as the model training is only taking
@@ -43,6 +44,7 @@ class Q10Model(pl.LightningModule):
             'dropout',
             'activation',
             'learning_rate',
+            'weight_decay'
         )
 
         self.features = features
@@ -150,7 +152,10 @@ class Q10Model(pl.LightningModule):
         self.log('test_loss', loss)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
-        return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+        return torch.optim.AdamW(
+            self.parameters(),
+            lr=self.hparams.learning_rate,
+            weight_decay=self.hparams.weight_decay)
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
