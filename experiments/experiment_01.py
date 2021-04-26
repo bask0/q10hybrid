@@ -6,7 +6,7 @@ import xarray as xr
 
 import os
 import shutil
-from argparse import ArgumentParser
+from argparse import ArgumentParsers
 from datetime import datetime
 
 from project.fluxdata import FluxData
