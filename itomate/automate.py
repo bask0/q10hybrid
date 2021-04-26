@@ -42,7 +42,7 @@ if __name__ == '__main__':
             '`exp_runner` must be one of (1 | 2), is {args.exp_id}.'
         )
 
-    remote_call = f'bash /Net/Groups/BGI/people/bkraft/git/q10hybrid/experiments/{exp_runner} 0 --new_study'
+    remote_call = f'bash /Net/Groups/BGI/people/bkraft/git/q10hybrid/itomate/{exp_runner} 0 --new_study'
     os.system(f"ssh -t luga '{remote_call}'")
 
     fd, path = tempfile.mkstemp(suffix='.config')
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     for row in range(args.nrows):
         for col in range(args.ncols):
             remote_call_parallel =\
-                f'bash /Net/Groups/BGI/people/bkraft/git/q10hybrid/experiments/{exp_runner} {col}; bash -l'
+                f'bash /Net/Groups/BGI/people/bkraft/git/q10hybrid/itomate/{exp_runner} {col}; bash -l'
             remote_call_parallel =\
                 f"ssh -t luga '{remote_call_parallel}'"
             config += make_panel(remote_call_parallel, row=row, col=col)
