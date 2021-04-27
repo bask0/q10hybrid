@@ -28,7 +28,8 @@ class Q10Model(pl.LightningModule):
             dropout: float = 0.,
             activation: bool = 'relu',
             learning_rate: float = 1e-3,
-            weight_decay: float = 0.) -> None:
+            weight_decay: float = 0.,
+            num_steps: int = 0) -> None:
         """Hybrid Q10 model.
 
         Note that restoring is not working currently as the model training is only taking
@@ -72,6 +73,8 @@ class Q10Model(pl.LightningModule):
         self.q10 = torch.nn.Parameter(torch.ones(1) * self.q10_init)
         self.ta_ref = 15.0
 
+        self.num_steps = num_steps
+
         # Used for strring results.
         self.ds = ds
 
@@ -102,7 +105,7 @@ class Q10Model(pl.LightningModule):
             self.target_norm(y)
         )
 
-    def training_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
+    def training_step(self, batch: Dict[str, torch.Tensor], batch_idx: int, optimizer_idx: int) -> torch.Tensor:
         # Split batch (a dict) into actual data and the time-index returned by the dataset.
         batch, _ = batch
 
@@ -156,20 +159,31 @@ class Q10Model(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
 
-        optimizer = torch.optim.AdamW(
-                [
-                    {
-                        'params': self.nn.parameters(),
-                        'lr': self.hparams.learning_rate,
-                        'weight_decay': self.hparams.weight_decay
-                    },
-                    {
-                        'params': [self.q10],
-                        'lr': self.hparams.learning_rate * 2,
-                        'weight_decay': 0.0
-                    }]
-            )
-        return optimizer
+        optimizer0 = torch.optim.AdamW(
+            params=self.nn.parameters(),
+            lr=self.hparams.learning_rate,
+            weight_decay=self.hparams.weight_decay
+        )
+        optimizer1 = torch.optim.SGD(
+            params=[self.q10],
+            lr=self.hparams.learning_rate,
+            momentum=0.9
+        )
+
+        up_steps = int(self.num_steps / 2)
+        down_steps = self.num_steps - up_steps
+        lr_scheduler = {
+            'scheduler': torch.optim.lr_scheduler.CyclicLR(
+                optimizer1,
+                base_lr=0.001,
+                max_lr=self.hparams.learning_rate * 10,
+                step_size_up=up_steps,
+                step_size_down=down_steps,
+                mode='triangular'),
+            'name': 'lr_scheduler_q10'
+        }
+
+        return [optimizer0, optimizer1], [lr_scheduler]
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
