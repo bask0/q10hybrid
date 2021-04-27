@@ -115,7 +115,8 @@ class Objective(object):
         }
         ds.q10.attrs = {
             'q10_init': q10_init,
-            'weight_decay': weight_decay
+            'weight_decay': weight_decay,
+            'ta_revert': ta_revert
         }
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
