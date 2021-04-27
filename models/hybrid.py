@@ -15,39 +15,6 @@ from utils.data_utils import Normalize
 from models.feedforward import FeedForward
 
 
-class GradientReversalFunction(Function):
-    """
-    https://github.com/jvanvugt/pytorch-domain-adaptation/blob/master/utils.py
-
-    Gradient Reversal Layer from:
-    Unsupervised Domain Adaptation by Backpropagation (Ganin & Lempitsky, 2015)
-    Forward pass is the identity function. In the backward pass,
-    the upstream gradients are multiplied by -lambda (i.e. gradient is reversed)
-    """
-
-    @staticmethod
-    def forward(ctx, x, lambda_):
-        ctx.lambda_ = lambda_
-        return x.clone()
-
-    @staticmethod
-    def backward(ctx, grads):
-        lambda_ = ctx.lambda_
-        lambda_ = grads.new_tensor(lambda_)
-        dx = -lambda_ * grads
-        return dx, None
-
-
-class GradientReversal(torch.nn.Module):
-    """https://github.com/jvanvugt/pytorch-domain-adaptation/blob/master/utils.py"""
-    def __init__(self, lambda_=1):
-        super(GradientReversal, self).__init__()
-        self.lambda_ = lambda_
-
-    def forward(self, x):
-        return GradientReversalFunction.apply(x, self.lambda_)
-
-
 class Q10Model(pl.LightningModule):
     def __init__(
             self,
@@ -60,7 +27,6 @@ class Q10Model(pl.LightningModule):
             num_layers: int = 2,
             dropout: float = 0.,
             activation: bool = 'relu',
-            ta_revert: bool = False,
             learning_rate: float = 1e-3,
             weight_decay: float = 0.) -> None:
         """Hybrid Q10 model.
@@ -87,12 +53,10 @@ class Q10Model(pl.LightningModule):
 
         self.q10_init = q10_init
 
-        self.ta_revert = ta_revert
-
         self.input_norm = norm.get_normalization_layer(variables=self.features, invert=False, stack=True)
         self.encode = FeedForward(
             num_inputs=len(self.features),
-            num_outputs=hidden_dim,
+            num_outputs=len(self.targets),,
             num_hidden=hidden_dim,
             num_layers=num_layers - 1,
             dropout=dropout,
@@ -100,31 +64,9 @@ class Q10Model(pl.LightningModule):
             activation=activation,
             activation_last=activation
         )
-        self.decode = FeedForward(
-            num_inputs=hidden_dim,
-            num_outputs=len(self.targets),
-            num_hidden=hidden_dim,
-            num_layers=1,
-            dropout=dropout,
-            activation=activation
-        )
-        self.nn_ta = torch.nn.Sequential(
-            GradientReversal(),
-            FeedForward(
-                num_inputs=hidden_dim,
-                num_outputs=1,
-                num_hidden=hidden_dim,
-                num_layers=1,
-                dropout=dropout,
-                activation=activation
-            )
-        ) if self.ta_revert else None
 
         self.target_norm = norm.get_normalization_layer(variables=self.targets, invert=False, stack=True)
         self.target_denorm = norm.get_normalization_layer(variables=self.targets, invert=True, stack=True)
-
-        self.ta_norm =\
-            norm.get_normalization_layer(variables=['ta'], invert=False, stack=True) if self.ta_revert else None
 
         self.criterion = torch.nn.MSELoss()
 
@@ -144,21 +86,15 @@ class Q10Model(pl.LightningModule):
         z = self.input_norm(x)
 
         # Forward pass through NN.
-        z = self.encode(z)
-        y = self.decode(z)
-
-        if self.ta_revert:
-            ta = self.nn_ta(z)
-        else:
-            ta = None
+        z = self.nn(z)
 
         # No denormalization done currently.
-        rb = torchf.softplus(y)
+        rb = torchf.softplus(z)
 
         # Physical part.
         reco = rb * self.q10 ** (0.1 * (x['ta'] - self.ta_ref))
 
-        return reco, rb, ta
+        return reco, rb
 
     def criterion_normed(self, y_hat: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Calculate criterion on normalized predictions and target."""
@@ -172,14 +108,10 @@ class Q10Model(pl.LightningModule):
         batch, _ = batch
 
         # self(...) calls self.forward(...) with some extras. The `rb` is not needed here.
-        reco_hat, _, ta = self(batch)
+        reco_hat, _ = self(batch)
 
         # Calculate loss on normalized data.
         loss = self.criterion_normed(reco_hat, batch['reco'])
-
-        # Optionally apply temperature reverse gradient.
-        if self.ta_revert:
-            loss += self.criterion(ta.squeeze(), self.ta_norm(ta))
 
         # Save Q10 values, we want to know how they evolve with training,
         self.q10_history[self.global_step] = self.q10.item()
@@ -194,7 +126,7 @@ class Q10Model(pl.LightningModule):
         batch, idx = batch
 
         # self(...) calls self.forward(...) with some extras. The `rb` is not needed here.
-        reco_hat, rb_hat, _ = self(batch)
+        reco_hat, rb_hat = self(batch)
 
         # Calculate loss on normalized data.
         loss = self.criterion_normed(reco_hat, batch['reco'])
@@ -219,19 +151,16 @@ class Q10Model(pl.LightningModule):
     def test_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
         # Evaluation on test set.
         batch, _ = batch
-        reco_hat, _, _ = self(batch)
+        reco_hat, _ = self(batch)
         loss = self.criterion_normed(reco_hat, batch['reco'])
         self.log('test_loss', loss)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
-        params = list(self.encode.parameters()) + list(self.decode.parameters())
-        if self.ta_revert:
-            params += list(self.nn_ta.parameters())
 
         optimizer = torch.optim.AdamW(
                 [
                     {
-                        'params': params,
+                        'params': self.nn.parameters(),
                         'lr': self.hparams.learning_rate,
                         'weight_decay': self.hparams.weight_decay
                     },
@@ -248,5 +177,5 @@ class Q10Model(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--hidden_dim', type=int, default=8)
         parser.add_argument('--num_layers', type=int, default=2)
-        parser.add_argument('--learning_rate', type=float, default=0.005)
+        parser.add_argument('--learning_rate', type=float, default=0.01)
         return parser
