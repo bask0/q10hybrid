@@ -29,7 +29,8 @@ class Q10Model(pl.LightningModule):
             activation: bool = 'relu',
             learning_rate: float = 1e-3,
             weight_decay: float = 0.,
-            num_steps: int = 0) -> None:
+            num_steps: int = 0,
+            lr_scheduler: bool = False) -> None:
         """Hybrid Q10 model.
 
         Note that restoring is not working currently as the model training is only taking
@@ -183,7 +184,10 @@ class Q10Model(pl.LightningModule):
             'name': 'lr_scheduler_q10'
         }
 
-        return [optimizer0, optimizer1], [lr_scheduler]
+        if lr_scheduler:
+            return [optimizer0, optimizer1], [lr_scheduler]
+        else:
+            return [optimizer0, optimizer1],
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
