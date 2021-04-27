@@ -54,15 +54,14 @@ class Q10Model(pl.LightningModule):
         self.q10_init = q10_init
 
         self.input_norm = norm.get_normalization_layer(variables=self.features, invert=False, stack=True)
-        self.encode = FeedForward(
+        self.nn = FeedForward(
             num_inputs=len(self.features),
-            num_outputs=len(self.targets),,
+            num_outputs=len(self.targets),
             num_hidden=hidden_dim,
-            num_layers=num_layers - 1,
+            num_layers=num_layers,
             dropout=dropout,
-            dropout_last=True,
+            dropout_last=False,
             activation=activation,
-            activation_last=activation
         )
 
         self.target_norm = norm.get_normalization_layer(variables=self.targets, invert=False, stack=True)
