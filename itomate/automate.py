@@ -37,9 +37,11 @@ if __name__ == '__main__':
         exp_runner = 'run_exp_01.sh'
     elif args.exp_id == 2:
         exp_runner = 'run_exp_02.sh'
+    elif args.exp_id == 3:
+        exp_runner = 'run_exp_03.sh'
     else:
         raise ValueError(
-            '`exp_runner` must be one of (1 | 2), is {args.exp_id}.'
+            f'`exp_runner` must be one of (1 | 2 | 3), is {args.exp_id}.'
         )
 
     remote_call = f'bash /Net/Groups/BGI/people/bkraft/git/q10hybrid/itomate/{exp_runner} 0 --new_study'
