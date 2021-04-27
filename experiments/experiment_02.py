@@ -32,7 +32,6 @@ class Objective(object):
         weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
         features = 'sw_pot, dsw_pot, ta'
         features_parsed = features.split(', ')
-        dropout = trial.suggest_float('dropout', 0.0, 1.0)
 
         pl.seed_everything(seed)
 
@@ -84,8 +83,9 @@ class Objective(object):
             hidden_dim=self.args.hidden_dim,
             num_layers=self.args.num_layers,
             learning_rate=self.args.learning_rate,
-            dropout=dropout,
-            weight_decay=weight_decay)
+            dropout=0.0,
+            weight_decay=weight_decay,
+            num_steps=len(train_loader))
 
         # ------------
         # training
@@ -93,7 +93,8 @@ class Objective(object):
         trainer = pl.Trainer.from_argparse_args(
             self.args,
             default_root_dir=self.args.log_dir,
-            **TRAINER_ARGS)
+            **TRAINER_ARGS,
+             callbacks=[pl.callbacks.LearningRateMonitor(logging_interval='step', log_momentum=True)])
         trainer.fit(model, train_loader, val_loader)
 
         # ------------
@@ -114,8 +115,7 @@ class Objective(object):
         }
         ds.q10.attrs = {
             'q10_init': q10_init,
-            'weight_decay': weight_decay,
-            'dropout': dropout
+            'weight_decay': weight_decay
         }
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
