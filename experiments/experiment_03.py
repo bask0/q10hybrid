@@ -116,7 +116,7 @@ class Objective(object):
         ds.q10.attrs = {
             'q10_init': q10_init,
             'weight_decay': weight_decay,
-            'ta_revert': ta_revert
+            'ta_revert': int(ta_revert)
         }
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
@@ -173,7 +173,7 @@ def main():
             storage=sql_path,
             sampler=optuna.samplers.GridSampler(search_space),
             direction='minimize',
-            load_if_exists=int(False))
+            load_if_exists=False)
 
         if args.new_study:
             exit()
