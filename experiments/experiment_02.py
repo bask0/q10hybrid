@@ -15,7 +15,7 @@ from models.hybrid import Q10Model
 # Hardcoded `Trainer` args. Note that these cannot be passed via cli.
 TRAINER_ARGS = dict(
     limit_train_batches=0.1,
-    max_epochs=35,
+    max_epochs=50,
     log_every_n_steps=1,
     gpus=1,
     weights_summary=None
@@ -32,6 +32,7 @@ class Objective(object):
         weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
         features = 'sw_pot, dsw_pot, ta'
         features_parsed = features.split(', ')
+        dropout = trial.suggest_float('dropout', 0.0, 1.0)
 
         pl.seed_everything(seed)
 
@@ -83,6 +84,7 @@ class Objective(object):
             hidden_dim=self.args.hidden_dim,
             num_layers=self.args.num_layers,
             learning_rate=self.args.learning_rate,
+            dropout=dropout,
             weight_decay=weight_decay)
 
         # ------------
@@ -112,7 +114,8 @@ class Objective(object):
         }
         ds.q10.attrs = {
             'q10_init': q10_init,
-            'weight_decay': weight_decay
+            'weight_decay': weight_decay,
+            'dropout': dropout
         }
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
@@ -155,7 +158,7 @@ def main():
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
         'seed': [i for i in range(10)],
-        'weight_decay': [0.001, 0.01, 0.1, 1.0]
+        'weight_decay': [0.0, 0.01, 0.1, 0.5]
     }
     sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
 
