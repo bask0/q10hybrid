@@ -87,7 +87,7 @@ class Objective(object):
             ta_revert=ta_revert,
             learning_rate=self.args.learning_rate,
             weight_decay=weight_decay)
-        print(model)
+
         # ------------
         # training
         # ------------
@@ -173,7 +173,7 @@ def main():
             storage=sql_path,
             sampler=optuna.samplers.GridSampler(search_space),
             direction='minimize',
-            load_if_exists=False)
+            load_if_exists=int(False))
 
         if args.new_study:
             exit()
