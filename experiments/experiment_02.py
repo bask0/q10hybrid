@@ -14,8 +14,7 @@ from models.hybrid import Q10Model
 
 # Hardcoded `Trainer` args. Note that these cannot be passed via cli.
 TRAINER_ARGS = dict(
-    limit_train_batches=0.1,
-    max_epochs=50,
+    max_epochs=10,
     log_every_n_steps=1,
     gpus=1,
     weights_summary=None
@@ -30,8 +29,14 @@ class Objective(object):
         q10_init = trial.suggest_float('q10_init', 0.0001, 1000.)
         seed = trial.suggest_int('seed', 0, 999999999999)
         weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
-        features = 'sw_pot, dsw_pot, ta'
-        features_parsed = features.split(', ')
+        use_ta  = trial.suggest_categorical('use_ta', [True, False])
+        dropout = trial.suggest_float('dropout', 0.0, 1.0)
+        use_scheduler = trial.suggest_categorical('use_scheduler', [True, False])
+
+        if use_ta:
+            features = ['sw_pot', 'dsw_pot', 'ta']
+        else:
+            features = ['sw_pot', 'dsw_pot']
 
         pl.seed_everything(seed)
 
@@ -45,7 +50,7 @@ class Objective(object):
         targets = ['reco']
 
         # Find variables that are only needed in physical model but not in NN.
-        physical_exclusive = [v for v in physical if v not in features_parsed]
+        physical_exclusive = [v for v in physical if v not in features]
 
         # ------------
         # data
@@ -54,7 +59,7 @@ class Objective(object):
 
         fluxdata = FluxData(
             ds,
-            features=features_parsed + physical_exclusive,
+            features=features + physical_exclusive,
             targets=targets,
             context_size=1,
             train_time=slice('2003-01-01', '2006-12-31'),
@@ -75,7 +80,7 @@ class Objective(object):
         # model
         # ------------
         model = Q10Model(
-            features=features_parsed,
+            features=features,
             targets=targets,
             norm=fluxdata._norm,
             ds=ds_pred,
@@ -83,9 +88,10 @@ class Objective(object):
             hidden_dim=self.args.hidden_dim,
             num_layers=self.args.num_layers,
             learning_rate=self.args.learning_rate,
-            dropout=0.0,
+            dropout=dropout,
             weight_decay=weight_decay,
-            num_steps=len(train_loader))
+            num_steps=len(train_loader) * max_epochs,
+            lr_scheduler=use_scheduler)
 
         # ------------
         # training
@@ -107,16 +113,20 @@ class Objective(object):
         # ------------
         # Store predictions.
         ds = fluxdata.add_scalar_record(model.ds, varname='q10', x=model.q10_history)
+        trial.set_user_attr('q10', ds.q10[-1].item())
 
         # Add some attributes that are required for analysis.
         ds.attrs = {
             'created': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'author': 'bkraft@bgc-jena.mpg.de'
-        }
-        ds.q10.attrs = {
+            'author': 'bkraft@bgc-jena.mpg.de',
             'q10_init': q10_init,
-            'weight_decay': weight_decay
+            'weight_decay': weight_decay,
+            'dropout': dropout,
+            'use_ta': int(use_ta),
+            'use_scheduler': int(use_scheduler),
+            'loss': trainer.callback_metrics['valid_loss'].item()
         }
+
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
         # Save data.
@@ -133,6 +143,8 @@ class Objective(object):
             '--restart', action='store_true')
         parser.add_argument(
             '--batch_size', default=240, type=int)
+        parser.add_argument(
+            '--lr_cycle_size', default=40, type=int)
         parser.add_argument(
             '--data_path', default='/Net/Groups/BGI/people/bkraft/data/Synthetic4BookChap.nc', type=str)
         parser.add_argument(
@@ -158,8 +170,12 @@ def main():
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
         'seed': [i for i in range(10)],
-        'weight_decay': [0.0, 0.01, 0.1, 0.5]
+        'weight_decay': [0.0, 0.01, 0.1],
+        'dropout': [0.0, 0.2, 0.4],
+        'use_ta': [True, False],
+        'use_scheduler': [True, False]
     }
+
     sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
 
     if args.new_study | args.restart:
