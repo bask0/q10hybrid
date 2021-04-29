@@ -47,7 +47,8 @@ class Q10Model(pl.LightningModule):
             'dropout',
             'activation',
             'learning_rate',
-            'weight_decay'
+            'weight_decay',
+            'lr_scheduler'
         )
 
         self.features = features
@@ -75,6 +76,7 @@ class Q10Model(pl.LightningModule):
         self.ta_ref = 15.0
 
         self.num_steps = num_steps
+        self.lr_scheduler = lr_scheduler
 
         # Used for strring results.
         self.ds = ds
@@ -106,7 +108,7 @@ class Q10Model(pl.LightningModule):
             self.target_norm(y)
         )
 
-    def training_step(self, batch: Dict[str, torch.Tensor], batch_idx: int, optimizer_idx: int) -> torch.Tensor:
+    def training_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> torch.Tensor:
         # Split batch (a dict) into actual data and the time-index returned by the dataset.
         batch, _ = batch
 
@@ -160,39 +162,51 @@ class Q10Model(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
 
-        optimizer0 = torch.optim.AdamW(
-            params=self.nn.parameters(),
-            lr=self.hparams.learning_rate,
-            weight_decay=self.hparams.weight_decay
-        )
-        optimizer1 = torch.optim.SGD(
-            params=[self.q10],
-            lr=self.hparams.learning_rate,
-            momentum=0.9
-        )
+        optimizer = torch.optim.Adam(
+                [
+                    {
+                        'params': self.nn.parameters(),
+                        'weight_decay': self.hparams.weight_decay,
+                    },
+                    {
+                        'params': [self.q10],
+                        'weight_decay': 0.0
+                    }],
+                lr = self.hparams.learning_rate
+            )
 
-        up_steps = int(self.num_steps / 2)
-        down_steps = self.num_steps - up_steps
-        lr_scheduler = {
-            'scheduler': torch.optim.lr_scheduler.CyclicLR(
-                optimizer1,
-                base_lr=0.001,
-                max_lr=self.hparams.learning_rate * 10,
-                step_size_up=up_steps,
-                step_size_down=down_steps,
-                mode='triangular'),
-            'name': 'lr_scheduler_q10'
-        }
-
-        if lr_scheduler:
-            return [optimizer0, optimizer1], [lr_scheduler]
+        if self.lr_scheduler:
+            # up_steps = int(self.num_steps / 2)
+            # down_steps = self.num_steps - up_steps
+            # lr_scheduler = {
+            #     'scheduler': torch.optim.lr_scheduler.CyclicLR(
+            #         optimizer,
+            #         base_lr=0.00001,
+            #         max_lr=self.hparams.learning_rate,
+            #         step_size_up=up_steps,
+            #         step_size_down=down_steps,
+            #         mode='triangular2'),
+            #     'name': 'lr_scheduler_q10',
+            #     'interval': 'step',
+            #     'frequency': 1
+            # }
+            lr_scheduler = {
+                'scheduler': torch.optim.lr_scheduler.OneCycleLR(
+                    optimizer,
+                    max_lr=self.hparams.learning_rate * 10,
+                    total_steps=self.num_steps),
+                'name': 'lr_scheduler_q10',
+                'interval': 'step',
+                'frequency': 1
+            }
+            return [optimizer], [lr_scheduler]
         else:
-            return [optimizer0, optimizer1],
+            return optimizer
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--hidden_dim', type=int, default=8)
         parser.add_argument('--num_layers', type=int, default=2)
-        parser.add_argument('--learning_rate', type=float, default=0.01)
+        parser.add_argument('--learning_rate', type=float, default=0.005)
         return parser
