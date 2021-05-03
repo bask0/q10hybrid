@@ -29,12 +29,6 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-## Note
-
-> From the `optuna` doc: `GridSampler` automatically stops the optimization if all combinations in the passed `search_space` have already been evaluated, internally invoking the `stop()` method.
-
-The grid search runs too many combinations, they are cleane in `analysis/analysis.ipynb`.
-
 ## Q10 hybrid modeling experiment
 
 Base respiration is simulated using observed short-wave irradiation and the delta thereof. Ecosyste respiration is calculated using the [Q10 approach](https://en.wikipedia.org/wiki/Q10_(temperature_coefficient)).
@@ -64,6 +58,12 @@ CUDA_VISIBLE_DEVICES=1 python experiments/experiment_01.py
 ```
 
 Use `analysis/analysis.ipynb` for evaluation.
+
+## Note
+
+> From the `optuna` doc: `GridSampler` automatically stops the optimization if all combinations in the passed `search_space` have already been evaluated, internally invoking the `stop()` method.
+
+The grid search runs too many combinations, they are cleane in `analysis/analysis.ipynb`.
 
 ### Results 
 
