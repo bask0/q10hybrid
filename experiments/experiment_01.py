@@ -148,7 +148,7 @@ class Objective(object):
         parser.add_argument(
             '--data_path', default='/Net/Groups/BGI/people/bkraft/data/Synthetic4BookChap.nc', type=str)
         parser.add_argument(
-            '--log_dir', default='./logs/experiment_02/', type=str)
+            '--log_dir', default='./logs/experiment_01/', type=str)
         return parser
 
 
