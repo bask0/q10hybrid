@@ -6,7 +6,7 @@ import xarray as xr
 
 import os
 import shutil
-from argparse import ArgumentParsers
+from argparse import ArgumentParser
 from datetime import datetime
 
 from project.fluxdata import FluxData
@@ -14,8 +14,7 @@ from models.hybrid import Q10Model
 
 # Hardcoded `Trainer` args. Note that these cannot be passed via cli.
 TRAINER_ARGS = dict(
-    limit_train_batches=0.1,
-    max_epochs=35,
+    max_epochs=10,
     log_every_n_steps=1,
     gpus=1,
     weights_summary=None
@@ -27,15 +26,17 @@ class Objective(object):
         self.args = args
 
     def __call__(self, trial: optuna.trial.Trial) -> float:
-        q10_init = trial.suggest_float('q10_init', 0.5, 2.5)
-        seed = trial.suggest_int('seed', 0, 9)
-        features = trial.suggest_categorical('features', ['sw_pot, dsw_pot', 'sw_pot, dsw_pot, ta'])
-        features_parsed = features.split(', ')
+        q10_init = trial.suggest_float('q10_init', 0.0001, 1000.)
+        seed = trial.suggest_int('seed', 0, 999999999999)
+        weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
+        use_ta  = trial.suggest_categorical('use_ta', [True, False])
+        dropout = trial.suggest_float('dropout', 0.0, 1.0)
+        use_scheduler = trial.suggest_categorical('use_scheduler', [True, False])
 
-        if 'ta' in features_parsed:
-            log_dir = os.path.join(self.args.log_dir, 'w_ta')
+        if use_ta:
+            features = ['sw_pot', 'dsw_pot', 'ta']
         else:
-            log_dir = os.path.join(self.args.log_dir, 'n_ta')
+            features = ['sw_pot', 'dsw_pot']
 
         pl.seed_everything(seed)
 
@@ -49,7 +50,7 @@ class Objective(object):
         targets = ['reco']
 
         # Find variables that are only needed in physical model but not in NN.
-        physical_exclusive = [v for v in physical if v not in features_parsed]
+        physical_exclusive = [v for v in physical if v not in features]
 
         # ------------
         # data
@@ -58,7 +59,7 @@ class Objective(object):
 
         fluxdata = FluxData(
             ds,
-            features=features_parsed + physical_exclusive,
+            features=features + physical_exclusive,
             targets=targets,
             context_size=1,
             train_time=slice('2003-01-01', '2006-12-31'),
@@ -79,22 +80,27 @@ class Objective(object):
         # model
         # ------------
         model = Q10Model(
-            features=features_parsed,
+            features=features,
             targets=targets,
             norm=fluxdata._norm,
             ds=ds_pred,
             q10_init=q10_init,
             hidden_dim=self.args.hidden_dim,
             num_layers=self.args.num_layers,
-            learning_rate=self.args.learning_rate)
+            learning_rate=self.args.learning_rate,
+            dropout=dropout,
+            weight_decay=weight_decay,
+            num_steps=len(train_loader) * max_epochs,
+            lr_scheduler=use_scheduler)
 
         # ------------
         # training
         # ------------
         trainer = pl.Trainer.from_argparse_args(
             self.args,
-            default_root_dir=log_dir,
-            **TRAINER_ARGS)
+            default_root_dir=self.args.log_dir,
+            **TRAINER_ARGS,
+             callbacks=[pl.callbacks.LearningRateMonitor(logging_interval='step', log_momentum=True)])
         trainer.fit(model, train_loader, val_loader)
 
         # ------------
@@ -107,13 +113,20 @@ class Objective(object):
         # ------------
         # Store predictions.
         ds = fluxdata.add_scalar_record(model.ds, varname='q10', x=model.q10_history)
+        trial.set_user_attr('q10', ds.q10[-1].item())
 
         # Add some attributes that are required for analysis.
         ds.attrs = {
             'created': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'author': 'bkraft@bgc-jena.mpg.de'
+            'author': 'bkraft@bgc-jena.mpg.de',
+            'q10_init': q10_init,
+            'weight_decay': weight_decay,
+            'dropout': dropout,
+            'use_ta': int(use_ta),
+            'use_scheduler': int(use_scheduler),
+            'loss': trainer.callback_metrics['valid_loss'].item()
         }
-        ds.q10.attrs = {'q10_init': q10_init, 'features': features}
+
         ds = ds.isel(epoch=slice(0, trainer.current_epoch + 1))
 
         # Save data.
@@ -131,9 +144,11 @@ class Objective(object):
         parser.add_argument(
             '--batch_size', default=240, type=int)
         parser.add_argument(
+            '--lr_cycle_size', default=40, type=int)
+        parser.add_argument(
             '--data_path', default='/Net/Groups/BGI/people/bkraft/data/Synthetic4BookChap.nc', type=str)
         parser.add_argument(
-            '--log_dir', default='./logs/experiment_01/', type=str)
+            '--log_dir', default='./logs/experiment_02/', type=str)
         return parser
 
 
@@ -155,8 +170,12 @@ def main():
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
         'seed': [i for i in range(10)],
-        'features': ['sw_pot, dsw_pot', 'sw_pot, dsw_pot, ta']
+        'weight_decay': [0.0, 0.01, 0.1],
+        'dropout': [0.0, 0.2, 0.4],
+        'use_ta': [True, False],
+        'use_scheduler': [True, False]
     }
+
     sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
 
     if args.new_study | args.restart:
