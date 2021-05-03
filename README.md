@@ -29,19 +29,25 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
+## Note
+
+> From the `optuna` doc: `GridSampler` automatically stops the optimization if all combinations in the passed `search_space` have already been evaluated, internally invoking the `stop()` method.
+
+The grid search runs too many combinations, they are cleane in `analysis/analysis.ipynb`.
+
 ## Q10 hybrid modeling experiment
 
-Base respiratino is simulated using observed short-wave irradiation and the delta thereof. Ecosyste respiration is calculated using the [Q10 approach](https://en.wikipedia.org/wiki/Q10_(temperature_coefficient)).
+Base respiration is simulated using observed short-wave irradiation and the delta thereof. Ecosyste respiration is calculated using the [Q10 approach](https://en.wikipedia.org/wiki/Q10_(temperature_coefficient)).
 
 <img src="https://render.githubusercontent.com/render/math?math=Rb_\mathrm{syn} = f(W_\mathrm{in, pot}, \Delta SW_\mathrm{in, pot})"><br>
 
 <img src="https://render.githubusercontent.com/render/math?math=RECO_\mathrm{syn} = Rb_\mathrm{syn} \cdot 1.5^{0.1 \cdot (TA - 15.0)}">
 
-## Experiment 1
+## Experiment
 
 Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). Due to equifinality, the variant with T is supposed to produe unstable Q10 estimates.
 
-#### Usage
+### Usage
 
 Run experiments:
 
@@ -59,15 +65,21 @@ CUDA_VISIBLE_DEVICES=1 python experiments/experiment_01.py
 
 Use `analysis/analysis.ipynb` for evaluation.
 
-#### Results 
+### Results 
 
-![training progress](/analysis/plots/training_progress.png)
+Stable Q10 estimation **without** air temperature as predictor:
 
-## Experiment 2
+![training progress](/analysis/plots/q10_wo_ta.png)
 
-[work in progress]
+Instable Q10 estimation **with** air temperature as predictor:
 
-### Citation
+![training progress](/analysis/plots/q10_wi_ta.png)
+
+Q10 estimation and loss for different HPs.
+
+![training progress](/analysis/plots/q10_interactions.png)
+
+## Citation
 
 ```tex
 @article{YourName,
