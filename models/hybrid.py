@@ -127,6 +127,9 @@ class Q10Model(pl.LightningModule):
         return loss
 
     def validation_step(self, batch: Dict[str, torch.Tensor], batch_idx: int) -> Dict[str, torch.Tensor]:
+        # Predictions are stored in validation step. This is not best practice, but we are more interested
+        # in predictions over training than on the final test predictions here.
+
         # Split batch (a dict) into actual data and the time-index returned by the dataset.
         batch, idx = batch
 
