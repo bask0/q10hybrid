@@ -83,12 +83,14 @@ def cli_main():
     # ------------
     # testing
     # ------------
+    # and Q10.
     trainer.test(test_dataloaders=test_loader)
 
     # ------------
     # save results
     # ------------
-    # Store predictions.
+    # Store predictions: these are not the predictions of the test set (but validation set above) as we want to
+    # # track development of the predictions over training.
     ds = fluxdata.add_scalar_record(model.ds, varname='q10', x=model.q10_history)
 
     # Add some attributes that are required for analysis.
