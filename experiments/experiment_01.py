@@ -112,7 +112,7 @@ class Objective(object):
                     verbose=False,
                     monitor='val_loss',
                     mode='min',
-                    prefix=self.model.__class__.__name__)
+                    prefix=model.__class__.__name__)
         ])
         trainer.fit(model, train_loader, val_loader)
 
@@ -174,6 +174,7 @@ def main():
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
     parser.add_argument('--new_study', action='store_true', help='create new study (deletes old) and exits')
+    parser.add_argument('--single_seed', action='store_true', help='use only one seed instead of (1, ..., 10).')
     args = parser.parse_args()
 
     # ------------
@@ -181,15 +182,16 @@ def main():
     # ------------
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
-        'seed': [i for i in range(10)],
+        'seed': [0] if args.single_seed else [i for i in range(10)],
         'weight_decay': [0.0, 0.01, 0.1],
         'dropout': [0.0, 0.2, 0.4],
         'use_ta': [True, False]
     }
 
-    sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
+    sql_file = os.path.abspath(os.path.join(args.log_dir, "optuna.db"))
+    sql_path = f'sqlite:///{sql_file}'
 
-    if args.new_study | args.restart:
+    if args.new_study | args.restart | (not os.path.isfile(sql_file)):
         shutil.rmtree(args.log_dir, ignore_errors=True)
         os.makedirs(args.log_dir)
         study = optuna.create_study(
