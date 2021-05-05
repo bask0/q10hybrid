@@ -99,13 +99,13 @@ class FluxData(LightningDataModule):
         context_size (int):
             Context length (t-context_size+1 : t).
         train_time (slice):
-            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') or the
+            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') of the
             training data.
         valid_time (slice):
-            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') or the
+            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') of the
             validation data.
         test_time (slice):
-            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') or the
+            Slice containg start and end time, e.g., slice('2001-01-01', '2001-12-31') of the
             test data.
         batch_size (int):
             The batch size.
