@@ -27,10 +27,7 @@ class Q10Model(pl.LightningModule):
             num_layers: int = 2,
             dropout: float = 0.,
             activation: bool = 'relu',
-            learning_rate: float = 1e-3,
-            weight_decay: float = 0.,
-            num_steps: int = 0,
-            lr_scheduler: bool = False) -> None:
+            num_steps: int = 0) -> None:
         """Hybrid Q10 model.
 
         Note that restoring is not working currently as the model training is only taking
@@ -165,46 +162,21 @@ class Q10Model(pl.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
 
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
                 [
                     {
                         'params': self.nn.parameters(),
                         'weight_decay': self.hparams.weight_decay,
+                        'learning_rate': self.hparams.learning_rate
                     },
                     {
                         'params': [self.q10],
-                        'weight_decay': 0.0
-                    }],
-                lr = self.hparams.learning_rate
+                        'weight_decay': 0.0,
+                        'learning_rate': self.hparams.learning_rate * 5
+                    }]
             )
 
-        if self.lr_scheduler:
-            # up_steps = int(self.num_steps / 2)
-            # down_steps = self.num_steps - up_steps
-            # lr_scheduler = {
-            #     'scheduler': torch.optim.lr_scheduler.CyclicLR(
-            #         optimizer,
-            #         base_lr=0.00001,
-            #         max_lr=self.hparams.learning_rate,
-            #         step_size_up=up_steps,
-            #         step_size_down=down_steps,
-            #         mode='triangular2'),
-            #     'name': 'lr_scheduler_q10',
-            #     'interval': 'step',
-            #     'frequency': 1
-            # }
-            lr_scheduler = {
-                'scheduler': torch.optim.lr_scheduler.OneCycleLR(
-                    optimizer,
-                    max_lr=self.hparams.learning_rate * 10,
-                    total_steps=self.num_steps),
-                'name': 'lr_scheduler_q10',
-                'interval': 'step',
-                'frequency': 1
-            }
-            return [optimizer], [lr_scheduler]
-        else:
-            return optimizer
+        return optimizer
 
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
