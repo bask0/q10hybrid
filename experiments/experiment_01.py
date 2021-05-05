@@ -17,7 +17,7 @@ from models.hybrid import Q10Model
 
 # Hardcoded `Trainer` args. Note that these cannot be passed via cli.
 TRAINER_ARGS = dict(
-    max_epochs=10,
+    max_epochs=100,
     log_every_n_steps=1,
     gpus=1,
     weights_summary=None
