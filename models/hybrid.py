@@ -44,8 +44,7 @@ class Q10Model(pl.LightningModule):
             'dropout',
             'activation',
             'learning_rate',
-            'weight_decay',
-            'lr_scheduler'
+            'weight_decay'
         )
 
         self.features = features
@@ -73,7 +72,6 @@ class Q10Model(pl.LightningModule):
         self.ta_ref = 15.0
 
         self.num_steps = num_steps
-        self.lr_scheduler = lr_scheduler
 
         # Used for strring results.
         self.ds = ds
