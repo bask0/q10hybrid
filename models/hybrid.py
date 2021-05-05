@@ -171,7 +171,7 @@ class Q10Model(pl.LightningModule):
                     {
                         'params': [self.q10],
                         'weight_decay': 0.0,
-                        'learning_rate': self.hparams.learning_rate * 5
+                        'learning_rate': self.hparams.learning_rate * 10
                     }]
             )
 
