@@ -31,7 +31,6 @@ class Objective(object):
         weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
         use_ta  = trial.suggest_categorical('use_ta', [True, False])
         dropout = trial.suggest_float('dropout', 0.0, 1.0)
-        use_scheduler = trial.suggest_categorical('use_scheduler', [True, False])
 
         if use_ta:
             features = ['sw_pot', 'dsw_pot', 'ta']
@@ -90,8 +89,7 @@ class Objective(object):
             learning_rate=self.args.learning_rate,
             dropout=dropout,
             weight_decay=weight_decay,
-            num_steps=len(train_loader) * max_epochs,
-            lr_scheduler=use_scheduler)
+            num_steps=len(train_loader) * max_epochs)
 
         # ------------
         # training
@@ -123,7 +121,6 @@ class Objective(object):
             'weight_decay': weight_decay,
             'dropout': dropout,
             'use_ta': int(use_ta),
-            'use_scheduler': int(use_scheduler),
             'loss': trainer.callback_metrics['valid_loss'].item()
         }
 
@@ -172,8 +169,7 @@ def main():
         'seed': [i for i in range(10)],
         'weight_decay': [0.0, 0.01, 0.1],
         'dropout': [0.0, 0.2, 0.4],
-        'use_ta': [True, False],
-        'use_scheduler': [True, False]
+        'use_ta': [True, False]
     }
 
     sql_path = f'sqlite:///{os.path.abspath(os.path.join(args.log_dir, "optuna.db"))}'
