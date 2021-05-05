@@ -27,7 +27,7 @@ class Q10Model(pl.LightningModule):
             learning_rate: float = 0.01,
             weight_decay: float = 0.,
             dropout: float = 0.,
-            activation: bool = 'relu',
+            activation: bool = 'tanh',
             num_steps: int = 0) -> None:
         """Hybrid Q10 model.
 
@@ -180,7 +180,7 @@ class Q10Model(pl.LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--hidden_dim', type=int, default=8)
+        parser.add_argument('--hidden_dim', type=int, default=16)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--learning_rate', type=float, default=0.01)
         return parser
