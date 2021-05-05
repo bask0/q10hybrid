@@ -103,14 +103,14 @@ class Objective(object):
             **TRAINER_ARGS,
              callbacks=[
                 EarlyStopping(
-                    monitor='val_loss',
+                    monitor='valid_loss',
                     patience=10,
                     min_delta=0.001),
                 ModelCheckpoint(
                     filename='{epoch}-{val_loss:.2f}',
                     save_top_k=1,
                     verbose=False,
-                    monitor='val_loss',
+                    monitor='valid_loss',
                     mode='min',
                     prefix=model.__class__.__name__)
         ])
