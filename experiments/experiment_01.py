@@ -98,7 +98,7 @@ class Objective(object):
             self.args,
             default_root_dir=self.args.log_dir,
             **TRAINER_ARGS,
-             callbacks=[pl.callbacks.LearningRateMonitor(logging_interval='step', log_momentum=True)])
+             callbacks=[])
         trainer.fit(model, train_loader, val_loader)
 
         # ------------
