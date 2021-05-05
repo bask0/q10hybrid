@@ -4,6 +4,9 @@ import pytorch_lightning as pl
 import optuna
 import xarray as xr
 
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
+
 import os
 import shutil
 from argparse import ArgumentParser
@@ -98,7 +101,19 @@ class Objective(object):
             self.args,
             default_root_dir=self.args.log_dir,
             **TRAINER_ARGS,
-             callbacks=[])
+             callbacks=[
+                EarlyStopping(
+                    monitor='val_loss',
+                    patience=10,
+                    min_delta=0.001),
+                ModelCheckpoint(
+                    filename='{epoch}-{val_loss:.2f}',
+                    save_top_k=1,
+                    verbose=False,
+                    monitor='val_loss',
+                    mode='min',
+                    prefix=self.model.__class__.__name__)
+        ])
         trainer.fit(model, train_loader, val_loader)
 
         # ------------
