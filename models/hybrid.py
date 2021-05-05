@@ -7,7 +7,6 @@ from typing import List, Dict, Tuple
 
 import torch
 import torch.nn.functional as torchf
-from torch.autograd import Function
 import pytorch_lightning as pl
 
 from utils.data_utils import Normalize
