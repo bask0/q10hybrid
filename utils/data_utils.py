@@ -396,7 +396,7 @@ class Normalize(object):
             variabes (List[str] or str):
                 Variables to transform, must have been registered previously.
             invert (bool):
-                Whether to normalize (`True`) or to denormalize (`False`).
+                Whether to normalize (`False`) or to invert normalization, i.e., denormalize (`True`).
             stack (bool):
                 Whether to stack dict to tensor along last dimension (`True`) or to return
                 a dic (`False`). Default is `False`.
