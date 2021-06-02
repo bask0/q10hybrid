@@ -32,7 +32,7 @@ class Objective(object):
         q10_init = trial.suggest_float('q10_init', 0.0001, 1000.)
         seed = trial.suggest_int('seed', 0, 999999999999)
         weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
-        use_ta  = trial.suggest_categorical('use_ta', [True, False])
+        use_ta = trial.suggest_categorical('use_ta', [True, False])
         dropout = trial.suggest_float('dropout', 0.0, 1.0)
 
         if use_ta:
@@ -101,11 +101,11 @@ class Objective(object):
             self.args,
             default_root_dir=self.args.log_dir,
             **TRAINER_ARGS,
-             callbacks=[
+            callbacks=[
                 EarlyStopping(
                     monitor='valid_loss',
                     patience=10,
-                    min_delta=0.001),
+                    min_delta=0.00001),
                 ModelCheckpoint(
                     filename='{epoch}-{val_loss:.2f}',
                     save_top_k=1,
