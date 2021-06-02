@@ -42,9 +42,6 @@ class Objective(object):
 
         pl.seed_everything(seed)
 
-        # These are the inputs to the NN.
-        #features = ['sw_pot', 'dsw_pot']
-
         # Further variables used in the hybrid model.
         physical = ['ta']
 
