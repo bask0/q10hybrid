@@ -113,13 +113,13 @@ class Objective(object):
                     monitor='valid_loss',
                     mode='min',
                     prefix=model.__class__.__name__)
-        ])
+            ])
         trainer.fit(model, train_loader, val_loader)
 
         # ------------
         # testing
         # ------------
-        #trainer.test(test_dataloaders=test_loader)
+        # trainer.test(test_dataloaders=test_loader)
 
         # ------------
         # save results
