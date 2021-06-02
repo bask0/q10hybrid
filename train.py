@@ -20,7 +20,6 @@ def cli_main():
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
 
-    # Some default arguments (not best practice but cannot use `add_argument`).
     args = parser.parse_args()
 
     pl.seed_everything(args.seed)
@@ -83,7 +82,6 @@ def cli_main():
     # ------------
     # testing
     # ------------
-    # and Q10.
     trainer.test(test_dataloaders=test_loader)
 
     # ------------
