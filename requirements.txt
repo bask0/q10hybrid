@@ -10,3 +10,4 @@ ipykernel
 matplotlib
 plotly
 seaborn
+joblib
