@@ -9,6 +9,8 @@ import numpy as np
 
 from typing import List, Tuple, Dict, Union, Iterable
 
+from joblib.externals.loky.backend.context import get_context
+
 from utils.data_utils import Normalize
 
 
@@ -177,6 +179,7 @@ class FluxData(LightningDataModule):
                 **self._datakwargs),
             batch_size=self._batch_size,
             shuffle=True,
+            multiprocessing_context=get_context('loky'),  # github.com/pytorch/pytorch/issues/44687
             **self._data_loader_kwargs
         )
 
@@ -188,6 +191,7 @@ class FluxData(LightningDataModule):
                 **self._datakwargs),
             batch_size=self._batch_size,
             shuffle=False,
+            multiprocessing_context=get_context('loky'),  # github.com/pytorch/pytorch/issues/44687,
             **self._data_loader_kwargs
         )
 
@@ -199,6 +203,7 @@ class FluxData(LightningDataModule):
                 **self._datakwargs),
             batch_size=self._batch_size,
             shuffle=False,
+            multiprocessing_context=get_context('loky'),  # github.com/pytorch/pytorch/issues/44687
             **self._data_loader_kwargs
         )
 
