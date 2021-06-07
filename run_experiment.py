@@ -42,7 +42,7 @@ def main(parser: ArgumentParser = None, **kwargs):
     print('>>> Creating study')
     run_exp1(parser, create_study=True)
 
-    print(f'>>> Running study with {args.num_jobs} workerss')
+    print(f'>>> Running study with {args.num_jobs} workers')
 
     # To distribute available GPUs across jobs.
     num_gpu = torch.cuda.device_count()
