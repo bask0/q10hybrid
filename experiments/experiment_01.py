@@ -1,5 +1,4 @@
 
-
 import pytorch_lightning as pl
 import optuna
 import xarray as xr
@@ -19,7 +18,6 @@ from models.hybrid import Q10Model
 TRAINER_ARGS = dict(
     max_epochs=100,
     log_every_n_steps=1,
-    gpus=1,
     weights_summary=None
 )
 
@@ -31,7 +29,6 @@ class Objective(object):
     def __call__(self, trial: optuna.trial.Trial) -> float:
         q10_init = trial.suggest_float('q10_init', 0.0001, 1000.)
         seed = trial.suggest_int('seed', 0, 999999999999)
-        weight_decay = trial.suggest_float('weight_decay', 0., 1000.)
         use_ta = trial.suggest_categorical('use_ta', [True, False])
         dropout = trial.suggest_float('dropout', 0.0, 1.0)
 
@@ -88,7 +85,7 @@ class Objective(object):
             num_layers=self.args.num_layers,
             learning_rate=self.args.learning_rate,
             dropout=dropout,
-            weight_decay=weight_decay,
+            weight_decay=self.args.weight_decay,
             num_steps=len(train_loader) * max_epochs)
 
         # ------------
@@ -130,7 +127,6 @@ class Objective(object):
             'created': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             'author': 'bkraft@bgc-jena.mpg.de',
             'q10_init': q10_init,
-            'weight_decay': weight_decay,
             'dropout': dropout,
             'use_ta': int(use_ta),
             'loss': trainer.callback_metrics['valid_loss'].item()
@@ -149,11 +145,7 @@ class Objective(object):
     def add_project_specific_args(parent_parser: ArgumentParser) -> ArgumentParser:
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument(
-            '--restart', action='store_true')
-        parser.add_argument(
             '--batch_size', default=240, type=int)
-        parser.add_argument(
-            '--lr_cycle_size', default=40, type=int)
         parser.add_argument(
             '--data_path', default='/Net/Groups/BGI/people/bkraft/data/Synthetic4BookChap.nc', type=str)
         parser.add_argument(
@@ -161,18 +153,27 @@ class Objective(object):
         return parser
 
 
-def main():
+def main(parser: ArgumentParser = None, **kwargs):
+    """Use kwargs to overload argparse args."""
 
     # ------------
     # args
     # ------------
-    parser = ArgumentParser()
+    if parser is None:
+        parser = ArgumentParser()
+
     parser = Objective.add_project_specific_args(parser)
     parser = pl.Trainer.add_argparse_args(parser)
     parser = Q10Model.add_model_specific_args(parser)
-    parser.add_argument('--new_study', action='store_true', help='create new study (deletes old) and exits')
+    parser.add_argument('--create_study', action='store_true', help='create new study (deletes old) and exits')
     parser.add_argument('--single_seed', action='store_true', help='use only one seed instead of (1, ..., 10).')
     args = parser.parse_args()
+
+    globargs = TRAINER_ARGS.copy()
+    globargs.update(kwargs)
+
+    for k, v in globargs.items():
+        setattr(args, k, v)
 
     # ------------
     # study setup
@@ -180,17 +181,17 @@ def main():
     search_space = {
         'q10_init': [0.5, 1.5, 2.5],
         'seed': [0] if args.single_seed else [i for i in range(10)],
-        'weight_decay': [0.0, 0.01, 0.1],
-        'dropout': [0.0, 0.2, 0.4],
+        'dropout': [0.0, 0.2, 0.4, 0.6],
         'use_ta': [True, False]
     }
 
     sql_file = os.path.abspath(os.path.join(args.log_dir, "optuna.db"))
     sql_path = f'sqlite:///{sql_file}'
 
-    if args.new_study | args.restart | (not os.path.isfile(sql_file)):
-        shutil.rmtree(args.log_dir, ignore_errors=True)
-        os.makedirs(args.log_dir)
+    if args.create_study | (not os.path.isfile(sql_file)):
+        if os.path.isdir(args.log_dir):
+            shutil.rmtree(args.log_dir)
+        os.makedirs(args.log_dir, exist_ok=True)
         study = optuna.create_study(
             study_name="q10hybrid",
             storage=sql_path,
@@ -198,8 +199,8 @@ def main():
             direction='minimize',
             load_if_exists=False)
 
-        if args.new_study:
-            exit()
+        if args.create_study:
+            return None
 
     if not os.path.isdir(args.log_dir):
         os.makedirs(args.log_dir)
@@ -208,13 +209,14 @@ def main():
     # run study
     # ------------
     n_trials = 1
-    for k, v in search_space.items():
+    for _, v in search_space.items():
         n_trials *= len(v)
     study = optuna.load_study(
         study_name="q10hybrid",
         storage=sql_path,
         sampler=optuna.samplers.GridSampler(search_space))
     study.optimize(Objective(args), n_trials=n_trials)
+
 
 if __name__ == '__main__':
     main()
