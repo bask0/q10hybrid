@@ -46,15 +46,27 @@ Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). Due to equifin
 Run experiments:
 
 ```bash
-# start first process on GPU 0 (--restart deletes existing runs)
-CUDA_VISIBLE_DEVICES=0 python experiments/experiment_01.py --restart
+# Create a new study (delete old runs).
+python experiments/experiment_01.py --create_study
 ```
 
-To work on independent runs in parallel, just call the study again from another terminal, **without `--restart`**!
+```bash
+# Start first process on GPU 0.
+CUDA_VISIBLE_DEVICES="0" python experiments/experiment_01.py
+```
+
+To work on independent runs in parallel, just call the study again from another terminal!
 
 ```bash
-# start a second process on GPU 1
-CUDA_VISIBLE_DEVICES=1 python experiments/experiment_01.py
+# Start a second process on GPU 1.
+CUDA_VISIBLE_DEVICES="1" python experiments/experiment_01.py
+```
+
+Alternatively, you can use `run_experiment.py` to create a new study and spawn multiple processes, for example with 12 jobs distributed
+on 4 GPUs (0,1,2,3). 
+```bash
+# Start a second process on GPU 1.
+CUDA_VISIBLE_DEVICES="0,1,2,3" python run_experiment.py --num_jobs 12
 ```
 
 Use `analysis/analysis.ipynb` for evaluation.
