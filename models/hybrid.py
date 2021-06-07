@@ -138,7 +138,7 @@ class Q10Model(pl.LightningModule):
         # Calculate loss on normalized data.
         self.log('valid_loss', loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
-        # This dict is available in `validation_epoch_end`.     
+        # This dict is available in `validation_epoch_end`.
         return {'reco_hat': reco_hat, 'rb_hat': rb_hat, 'idx': idx}
 
     def validation_epoch_end(self, validation_step_outputs) -> None:
