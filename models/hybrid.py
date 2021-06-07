@@ -25,7 +25,7 @@ class Q10Model(pl.LightningModule):
             hidden_dim: int = 128,
             num_layers: int = 2,
             learning_rate: float = 0.01,
-            weight_decay: float = 0.,
+            weight_decay: float = 0.1,
             dropout: float = 0.,
             activation: bool = 'tanh',
             num_steps: int = 0) -> None:
@@ -162,18 +162,19 @@ class Q10Model(pl.LightningModule):
     def configure_optimizers(self) -> torch.optim.Optimizer:
 
         optimizer = torch.optim.AdamW(
-                [
-                    {
-                        'params': self.nn.parameters(),
-                        'weight_decay': self.hparams.weight_decay,
-                        'learning_rate': self.hparams.learning_rate
-                    },
-                    {
-                        'params': [self.q10],
-                        'weight_decay': 0.0,
-                        'learning_rate': self.hparams.learning_rate * 10
-                    }]
-            )
+            [
+                {
+                    'params': self.nn.parameters(),
+                    'weight_decay': self.hparams.weight_decay,
+                    'learning_rate': self.hparams.learning_rate
+                },
+                {
+                    'params': [self.q10],
+                    'weight_decay': 0.0,
+                    'learning_rate': self.hparams.learning_rate * 10
+                }
+            ]
+        )
 
         return optimizer
 
@@ -182,5 +183,7 @@ class Q10Model(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--hidden_dim', type=int, default=16)
         parser.add_argument('--num_layers', type=int, default=2)
+        parser.add_argument('--c', type=float, default=0.1)
         parser.add_argument('--learning_rate', type=float, default=0.05)
+        parser.add_argument('--weight_decay', type=float, default=0.1)
         return parser
