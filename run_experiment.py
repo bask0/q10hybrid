@@ -1,4 +1,6 @@
 
+import torch
+import numpy as np
 from joblib import Parallel, delayed
 from argparse import ArgumentParser
 import time
@@ -40,10 +42,14 @@ def main(parser: ArgumentParser = None, **kwargs):
     print('>>> Creating study')
     run_exp1(parser, create_study=True)
 
-    print(f'>>> Running study with {args.num_jobs} workers')
+    print(f'>>> Running study with {args.num_jobs} workerss')
+
+    # To distribute available GPUs across jobs.
+    num_gpu = torch.cuda.device_count()
+    gpu_list = np.arange(args.num_jobs) % num_gpu
 
     with Timer():
-        Parallel(n_jobs=args.num_jobs)(delayed(run_exp1)(parser) for _ in range(args.num_jobs))
+        Parallel(n_jobs=args.num_jobs)(delayed(run_exp1)(parser, gpus=str(gpu)) for gpu in gpu_list)
 
 
 if __name__ == '__main__':
