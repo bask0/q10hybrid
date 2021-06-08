@@ -41,6 +41,8 @@ Base respiration is simulated using observed short-wave irradiation and the delt
 
 Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). Due to equifinality, the variant with T is supposed to produe unstable Q10 estimates.
 
+![data](/analysis/plots/data.png)
+
 ### Usage
 
 Run experiments:
