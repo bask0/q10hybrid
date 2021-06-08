@@ -39,7 +39,7 @@ Base respiration is simulated using observed short-wave irradiation and the delt
 
 ## Experiment
 
-Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). Due to equifinality, the variant with T is supposed to produe unstable Q10 estimates.
+Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). We investigate wheter we can estimate Q10 in both cases robustly and model hyperparameters (here: dropout={0.0, 0.2, 0.4, 0.6}) impacts the results.
 
 ![data](/analysis/plots/data.png)
 
@@ -87,7 +87,7 @@ Q10 estimation **without** (top) and **with** (bottom) air temperature as predic
 
 Q10 estimation and loss for different HPs.
 
-![training progress](/analysis/plots/q10_interactions.png)
+![Q10 interactions](/analysis/plots/q10_interactions.png)
 
 ## Citation
 
