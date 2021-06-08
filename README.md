@@ -81,13 +81,9 @@ The grid search runs too many combinations, they are cleane in `analysis/analysi
 
 ### Results 
 
-Stable Q10 estimation **without** air temperature as predictor:
+Q10 estimation **without** (top) and **with** (bottom) air temperature as predictor:
 
-![training progress](/analysis/plots/q10_wo_ta.png)
-
-Instable Q10 estimation **with** air temperature as predictor:
-
-![training progress](/analysis/plots/q10_wi_ta.png)
+![training progress](/analysis/plots/q10_training.png)
 
 Q10 estimation and loss for different HPs.
 
