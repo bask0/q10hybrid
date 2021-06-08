@@ -39,7 +39,12 @@ Base respiration is simulated using observed short-wave irradiation and the delt
 
 ## Experiment
 
-Estimate Q10 and Rb=NN(SW_in, dSW_in) vs Rb=NN(SW_in, dSW_in, T). We investigate wheter we can estimate Q10 in both cases robustly and model hyperparameters (here: dropout={0.0, 0.2, 0.4, 0.6}) impacts the results.
+Estimate Q10 in two different setups:
+
+* Rb=NN(SW_in, dSW_in)
+* Rb=NN(SW_in, dSW_in, T)
+
+We investigate wheter we can estimate Q10 in both cases robustly and how model hyperparameters (here: dropout={0.0, 0.2, 0.4, 0.6}) impact the results.
 
 ![data](/analysis/plots/data.png)
 
